@@ -1126,7 +1126,7 @@ function Node2D({ node, index, isHovered, onHover, onLeave, onClick, isMobile })
     if (color.includes('blue')) return 'url(#blue-glow)';
     if (color.includes('green')) return 'url(#green-glow)';
     if (color.includes('red') || color.includes('orange')) return 'url(#red-glow)';
-    if (color.includes('purple') || color.includes('pink')) return 'url(#purple-glow)';
+    if (color.includes('purple') || color.includes('pink') || color.includes('fuchsia')) return 'url(#purple-glow)';
     return 'url(#blue-glow)';
   };
   
@@ -1143,15 +1143,15 @@ function Node2D({ node, index, isHovered, onHover, onLeave, onClick, isMobile })
         onClick();
       }}
     >
-      {/* Intense Hover Glow Effect */}
+      {/* Intense Hover Glow Effect (Toned down for glassmorphic style) */}
       {isHovered && (
         <motion.circle
-          r={size}
+          r={size * 0.8}
           fill={getGlowColor(node.color)}
           initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 0.5 }}
+          animate={{ scale: 1, opacity: 0.3 }}
           transition={{ duration: 0.4 }}
-          style={{ filter: 'blur(20px)' }}
+          style={{ filter: 'blur(30px)' }}
         />
       )}
 
@@ -1164,28 +1164,31 @@ function Node2D({ node, index, isHovered, onHover, onLeave, onClick, isMobile })
         className="overflow-visible"
       >
         <motion.div
-          initial={{ opacity: 0, scale: 0, y: 20 }}
+          initial={{ opacity: 0, scale: 0.9, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ delay: index * 0.05, type: 'spring', stiffness: 200, damping: 20 }}
-          whileHover={{ scale: 1.08, y: -5 }}
+          whileHover={{ scale: 1.05, y: -5 }}
           whileTap={{ scale: 0.95 }}
-          className={`relative w-full h-full rounded-2xl bg-gradient-to-br ${node.color} p-[1px] shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-all duration-300 z-10`}
+          className="relative w-full h-full rounded-[20px] p-[1px] shadow-sm transition-all duration-300 z-10"
         >
+          {/* Subtle gradient border based on node color */}
+          <div className={`absolute inset-0 rounded-[20px] bg-gradient-to-br ${node.color} opacity-40`} />
+
           {/* Inner Glassmorphism Container */}
-          <div className="w-full h-full bg-black/80 backdrop-blur-xl rounded-[15px] p-3 sm:p-4 flex flex-col items-center justify-center text-center gap-2 border border-white/5 relative overflow-hidden group">
+          <div className="w-full h-full bg-black/60 backdrop-blur-xl rounded-[19px] p-3 sm:p-4 flex flex-col items-center justify-center text-center gap-2 border border-white/5 relative overflow-hidden group">
             
             {/* Hover shine effect */}
             <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -translate-x-full group-hover:translate-x-full" />
 
-            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${node.color} flex items-center justify-center shadow-lg shadow-black/50 flex-shrink-0 relative z-10`}>
-              <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white drop-shadow-md" />
+            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${node.color} flex items-center justify-center shadow-inner flex-shrink-0 relative z-10 opacity-90`}>
+              <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             
-            <h3 className="text-xs sm:text-sm font-bold text-white line-clamp-2 leading-tight px-1 drop-shadow-sm z-10">
+            <h3 className="text-xs sm:text-sm font-semibold text-zinc-100 line-clamp-2 leading-tight px-1 z-10">
               {node.title}
             </h3>
             
-            <p className="text-[9px] sm:text-[10px] text-zinc-400 font-medium tracking-wide bg-black/50 px-2 py-1 rounded-md z-10">
+            <p className="text-[9px] sm:text-[10px] text-zinc-400 font-medium tracking-wide bg-white/5 border border-white/5 px-2 py-1 rounded-md z-10">
               {node.subtitle}
             </p>
           </div>
@@ -1197,17 +1200,17 @@ function Node2D({ node, index, isHovered, onHover, onLeave, onClick, isMobile })
         <>
           <motion.circle
             r={size / 1.8}
-            className="stroke-blue-500 fill-none stroke-[2]"
-            initial={{ scale: 1, opacity: 0.8 }}
-            animate={{ scale: 2, opacity: 0 }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeOut" }}
+            className="stroke-blue-500 fill-none stroke-[1]"
+            initial={{ scale: 1, opacity: 0.5 }}
+            animate={{ scale: 1.8, opacity: 0 }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeOut" }}
           />
           <motion.circle
             r={size / 1.8}
-            className="stroke-purple-500 fill-none stroke-[2]"
-            initial={{ scale: 1, opacity: 0.8 }}
-            animate={{ scale: 2, opacity: 0 }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeOut", delay: 1.5 }}
+            className="stroke-purple-500 fill-none stroke-[1]"
+            initial={{ scale: 1, opacity: 0.5 }}
+            animate={{ scale: 1.8, opacity: 0 }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeOut", delay: 2 }}
           />
         </>
       )}
@@ -1222,7 +1225,7 @@ function ConnectionLine2D({ from, to, isHovered }) {
   
   const midX = (from.x + to.x) / 2;
   const midY = (from.y + to.y) / 2;
-  const curveOffset = distance * 0.2;
+  const curveOffset = distance * 0.15;
   const perpX = -dy / distance * curveOffset;
   const perpY = dx / distance * curveOffset;
   
@@ -1233,36 +1236,36 @@ function ConnectionLine2D({ from, to, isHovered }) {
 
   return (
     <>
-      {/* Thick Glow layer */}
-      <motion.path
-        d={pathData}
-        stroke="url(#line-gradient-blue)"
-        strokeWidth={isHovered ? "8" : "4"}
-        fill="none"
-        initial={{ pathLength: 0, opacity: 0 }}
-        animate={{ pathLength: 1, opacity: isHovered ? 0.8 : 0.3 }}
-        transition={{ delay: 0.2, duration: 0.8 }}
-        style={{ filter: 'blur(4px)' }}
-      />
-      
-      {/* Sharp Main line */}
+      {/* Subtle background track */}
       <motion.path
         d={pathData}
         className={`transition-all duration-300`}
-        stroke={isHovered ? '#fff' : '#60a5fa'}
-        strokeWidth={isHovered ? "2" : "1"}
+        stroke={isHovered ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)'}
+        strokeWidth="1.5"
+        fill="none"
+        initial={{ pathLength: 0, opacity: 0 }}
+        animate={{ pathLength: 1, opacity: 1 }}
+        transition={{ delay: 0.1, duration: 0.8 }}
+      />
+      
+      {/* Animated dash array line */}
+      <motion.path
+        d={pathData}
+        className={`transition-all duration-300`}
+        stroke={isHovered ? '#fff' : 'rgba(255,255,255,0.3)'}
+        strokeWidth="1"
         fill="none"
         initial={{ pathLength: 0, opacity: 0 }}
         animate={{ pathLength: 1, opacity: isHovered ? 1 : 0.4 }}
         transition={{ delay: 0.2, duration: 0.8 }}
-        strokeDasharray={isHovered ? "0" : "6 6"}
+        strokeDasharray="4 8"
       />
       
-      {/* Fast Animated particle */}
+      {/* Soft Animated particle */}
       {isHovered && (
-        <circle r="4" fill="#fff" style={{ filter: 'drop-shadow(0 0 4px #60a5fa)' }}>
+        <circle r="2" fill="#fff" style={{ filter: 'drop-shadow(0 0 2px rgba(255,255,255,0.8))' }}>
           <animateMotion
-            dur="1.5s"
+            dur="2s"
             repeatCount="indefinite"
             path={pathData}
           />
@@ -1283,30 +1286,30 @@ function CenterNodeDetails({ data }) {
           icon={Flame}
           label="Viral Potential"
           value={data.insights.overview.viralPotential}
-          color="from-red-500 to-orange-600"
+          color="from-red-500/20 to-orange-600/20 text-red-500"
         />
         <StatCard
           icon={TrendingUp}
           label="Momentum"
           value={data.insights.overview.marketMomentum}
-          color="from-blue-500 to-cyan-600"
+          color="from-blue-500/20 to-cyan-600/20 text-blue-500"
         />
         <StatCard
           icon={Target}
           label="Topics"
           value={data.insights.overview.trendingTopics}
-          color="from-purple-500 to-pink-600"
+          color="from-purple-500/20 to-pink-600/20 text-purple-500"
         />
         <StatCard
           icon={Eye}
           label="Videos"
           value={(data.summary.totalVideosAnalyzed * 10.5 || 305).toFixed(0)}
-          color="from-green-500 to-emerald-600"
+          color="from-green-500/20 to-emerald-600/20 text-green-500"
         />
       </div>
 
       {/* Summary */}
-      <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
+      <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-xl p-6 shadow-sm">
         <h3 className="text-sm font-semibold text-zinc-400 mb-3 flex items-center gap-2">
           <Info className="w-4 h-4" />
           Market Summary
@@ -1317,7 +1320,7 @@ function CenterNodeDetails({ data }) {
       </div>
 
       {/* Viral Patterns */}
-      <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
+      <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-xl p-6 shadow-sm">
         <h3 className="text-sm font-semibold text-zinc-400 mb-4 flex items-center gap-2">
           <Sparkles className="w-4 h-4" />
           Viral Patterns
@@ -1327,7 +1330,7 @@ function CenterNodeDetails({ data }) {
             <p className="text-xs text-zinc-500 mb-2 font-medium">Title Hooks</p>
             <div className="space-y-2">
               {data.insights.viralPatterns.titleHooks.map((hook, idx) => (
-                <div key={idx} className="bg-[#000] border border-zinc-900 rounded-lg p-3 text-sm text-zinc-300">
+                <div key={idx} className="bg-black/40 border border-white/5 rounded-lg p-3 text-sm text-zinc-300">
                   {hook}
                 </div>
               ))}
@@ -1337,7 +1340,7 @@ function CenterNodeDetails({ data }) {
             <p className="text-xs text-zinc-500 mb-2 font-medium">Content Styles</p>
             <div className="space-y-2">
               {data.insights.viralPatterns.contentStyles.map((style, idx) => (
-                <div key={idx} className="bg-[#000] border border-zinc-900 rounded-lg p-3 text-sm text-zinc-300">
+                <div key={idx} className="bg-black/40 border border-white/5 rounded-lg p-3 text-sm text-zinc-300">
                   {style}
                 </div>
               ))}
@@ -1351,17 +1354,17 @@ function CenterNodeDetails({ data }) {
 
 function QuickWinDetails({ data }) {
   const effortColors = {
-    low: 'from-green-500 to-emerald-600',
-    medium: 'from-yellow-500 to-orange-600',
-    high: 'from-red-500 to-pink-600'
+    low: 'from-green-500/20 to-emerald-600/20 text-green-500',
+    medium: 'from-yellow-500/20 to-orange-600/20 text-yellow-500',
+    high: 'from-red-500/20 to-pink-600/20 text-red-500'
   };
 
   return (
     <div className="space-y-6">
-      <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
+      <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-xl p-6 shadow-sm">
         <div className="flex items-start gap-3 mb-4">
-          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${effortColors[data.effort]} flex items-center justify-center shadow-lg`}>
-            <Lightbulb className="w-6 h-6 text-white" />
+          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${effortColors[data.effort]} flex items-center justify-center border border-white/5`}>
+            <Lightbulb className="w-6 h-6" />
           </div>
           <div className="flex-1">
             <h3 className="text-lg font-bold text-white mb-1">{data.idea}</h3>
@@ -1369,26 +1372,26 @@ function QuickWinDetails({ data }) {
           </div>
         </div>
         
-        <div className="bg-[#000] border border-zinc-900 rounded-lg p-4">
+        <div className="bg-black/40 border border-white/5 rounded-lg p-4">
           <p className="text-xs text-zinc-500 mb-2 font-medium">Why It Works</p>
           <p className="text-sm text-zinc-300 leading-relaxed">{data.why}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4">
+        <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-xl p-4 shadow-sm">
           <p className="text-xs text-zinc-500 mb-2">Effort Level</p>
-          <span className={`inline-flex items-center px-3 py-1 rounded-lg text-sm font-semibold bg-gradient-to-br ${effortColors[data.effort]} text-white shadow-lg capitalize`}>
+          <span className={`inline-flex items-center px-3 py-1 rounded-lg text-sm font-semibold bg-gradient-to-br ${effortColors[data.effort]} border border-white/5 capitalize`}>
             {data.effort}
           </span>
         </div>
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4">
+        <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-xl p-4 shadow-sm">
           <p className="text-xs text-zinc-500 mb-2">Timeline</p>
           <p className="text-sm font-bold text-white">{data.timing}</p>
         </div>
       </div>
 
-      <div className="bg-gradient-to-br from-blue-950/50 to-purple-950/50 border border-blue-900/50 rounded-xl p-6">
+      <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 backdrop-blur-xl border border-blue-500/20 rounded-xl p-6 shadow-sm">
         <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
           <Trophy className="w-4 h-4 text-yellow-500" />
           Quick Win Strategy
@@ -1414,32 +1417,32 @@ function QuickWinDetails({ data }) {
 
 function TrendDetails({ data }) {
   const momentumColors = {
-    rising: 'from-blue-500 to-cyan-600',
-    hot: 'from-red-500 to-orange-600',
-    peaked: 'from-yellow-500 to-orange-600',
-    declining: 'from-zinc-500 to-zinc-600'
+    rising: 'from-blue-500/20 to-cyan-600/20 text-blue-500',
+    hot: 'from-red-500/20 to-orange-600/20 text-red-500',
+    peaked: 'from-yellow-500/20 to-orange-600/20 text-yellow-500',
+    declining: 'from-zinc-500/20 to-zinc-600/20 text-zinc-400'
   };
 
   const difficultyColors = {
-    easy: 'from-green-500 to-emerald-600',
-    medium: 'from-yellow-500 to-orange-600',
-    hard: 'from-red-500 to-pink-600'
+    easy: 'from-green-500/20 to-emerald-600/20 text-green-500',
+    medium: 'from-yellow-500/20 to-orange-600/20 text-yellow-500',
+    hard: 'from-red-500/20 to-pink-600/20 text-red-500'
   };
 
   return (
     <div className="space-y-6">
-      <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
+      <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-xl p-6 shadow-sm">
         <div className="flex items-start gap-4 mb-4">
-          <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${momentumColors[data.momentum]} flex items-center justify-center shadow-lg`}>
-            <Hash className="w-8 h-8 text-white" />
+          <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${momentumColors[data.momentum]} flex items-center justify-center border border-white/5`}>
+            <Hash className="w-8 h-8" />
           </div>
           <div className="flex-1">
             <h3 className="text-xl font-bold text-white mb-2">{data.topic}</h3>
             <div className="flex items-center gap-2">
-              <span className={`px-3 py-1 rounded-lg text-xs font-semibold bg-gradient-to-br ${momentumColors[data.momentum]} text-white shadow-lg capitalize`}>
+              <span className={`px-3 py-1 rounded-lg text-xs font-semibold bg-gradient-to-br ${momentumColors[data.momentum]} border border-white/5 capitalize`}>
                 {data.momentum}
               </span>
-              <span className={`px-3 py-1 rounded-lg text-xs font-semibold bg-gradient-to-br ${difficultyColors[data.difficulty]} text-white shadow-lg capitalize`}>
+              <span className={`px-3 py-1 rounded-lg text-xs font-semibold bg-gradient-to-br ${difficultyColors[data.difficulty]} border border-white/5 capitalize`}>
                 {data.difficulty}
               </span>
             </div>
@@ -1456,7 +1459,7 @@ function TrendDetails({ data }) {
         <p className="text-sm text-zinc-400 leading-relaxed">{data.opportunity}</p>
       </div>
 
-      <div className="bg-gradient-to-br from-purple-950/50 to-blue-950/50 border border-purple-900/50 rounded-xl p-6">
+      <div className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 backdrop-blur-xl border border-purple-500/20 rounded-xl p-6 shadow-sm">
         <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
           <Rocket className="w-4 h-4 text-purple-400" />
           Actionable Idea
@@ -1465,14 +1468,14 @@ function TrendDetails({ data }) {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4">
+        <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-xl p-4 shadow-sm">
           <div className="flex items-center gap-2 text-zinc-500 mb-2">
             <Clock className="w-4 h-4" />
             <span className="text-xs font-medium">Time Window</span>
           </div>
           <p className="text-sm font-bold text-white">{data.timeWindow}</p>
         </div>
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4">
+        <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-xl p-4 shadow-sm">
           <div className="flex items-center gap-2 text-zinc-500 mb-2">
             <Eye className="w-4 h-4" />
             <span className="text-xs font-medium">Est. Views</span>
@@ -1486,21 +1489,21 @@ function TrendDetails({ data }) {
 
 function VideoIdeaDetails({ data }) {
   const difficultyColors = {
-    Easy: 'from-green-500 to-emerald-600',
-    Medium: 'from-yellow-500 to-orange-600',
-    Hard: 'from-red-500 to-pink-600'
+    Easy: 'from-green-500/20 to-emerald-600/20 text-green-500',
+    Medium: 'from-yellow-500/20 to-orange-600/20 text-yellow-500',
+    Hard: 'from-red-500/20 to-pink-600/20 text-red-500'
   };
 
   return (
     <div className="space-y-6">
-      <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
+      <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-xl p-6 shadow-sm">
         <div className="flex items-start gap-4 mb-4">
-          <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-fuchsia-500 to-violet-600 flex items-center justify-center shadow-lg">
-            <Video className="w-8 h-8 text-white" />
+          <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-fuchsia-500/20 to-violet-600/20 border border-fuchsia-500/20 flex items-center justify-center">
+            <Video className="w-8 h-8 text-fuchsia-500" />
           </div>
           <div className="flex-1">
             <h3 className="text-xl font-bold text-white mb-2">{data.title}</h3>
-            <span className={`inline-flex px-3 py-1 rounded-lg text-xs font-semibold bg-gradient-to-br ${difficultyColors[data.difficulty] || difficultyColors.Medium} text-white shadow-lg capitalize`}>
+            <span className={`inline-flex px-3 py-1 rounded-lg text-xs font-semibold bg-gradient-to-br ${difficultyColors[data.difficulty] || difficultyColors.Medium} border border-white/5 capitalize`}>
               {data.difficulty}
             </span>
           </div>
@@ -1510,7 +1513,7 @@ function VideoIdeaDetails({ data }) {
       </div>
 
       <div className="grid grid-cols-1 gap-3">
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 flex items-center justify-between">
+        <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-xl p-4 flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-2 text-zinc-500">
             <Eye className="w-5 h-5 text-blue-400" />
             <span className="text-sm font-medium">Predicted Views</span>
@@ -1524,10 +1527,10 @@ function VideoIdeaDetails({ data }) {
 
 function StatCard({ icon: Icon, label, value, color }) {
   return (
-    <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4">
+    <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-xl p-4 shadow-sm">
       <div className="flex items-center gap-2 mb-3">
-        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${color} flex items-center justify-center shadow-lg`}>
-          <Icon className="w-4 h-4 text-white" />
+        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${color} flex items-center justify-center border border-white/5`}>
+          <Icon className="w-4 h-4" />
         </div>
         <span className="text-xs text-zinc-500 font-medium">{label}</span>
       </div>
@@ -1540,16 +1543,17 @@ function EmptyState({ onScan, hasChannel }) {
   return (
     <div className="w-full h-full flex items-center justify-center px-4">
       <div className="text-center max-w-md">
-        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mx-auto mb-6 sm:mb-8 shadow-2xl shadow-blue-500/20">
-          <Radio className="w-10 h-10 sm:w-12 sm:h-12 text-white animate-pulse" />
+        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[24px] bg-black/60 backdrop-blur-xl border border-white/5 flex items-center justify-center mx-auto mb-6 sm:mb-8 shadow-sm">
+          <div className="absolute inset-0 rounded-[24px] bg-gradient-to-br from-blue-500/10 to-purple-600/10 opacity-50 pointer-events-none" />
+          <Radio className="w-10 h-10 sm:w-12 sm:h-12 text-zinc-300 animate-pulse relative z-10" />
         </div>
-        <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 tracking-tight">Discover Viral Opportunities</h2>
+        <h2 className="text-2xl sm:text-3xl font-semibold mb-3 sm:mb-4 tracking-tight text-white">Discover Viral Opportunities</h2>
         <p className="text-sm sm:text-base text-zinc-500 mb-6 sm:mb-8 leading-relaxed">
           Explore trending content in an interactive mind map. Click any node to dive deep into insights.
         </p>
         {!hasChannel ? (
-          <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
-            <AlertCircle className="w-8 h-8 text-yellow-500 mx-auto mb-3" />
+          <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-xl p-6 shadow-sm inline-flex flex-col items-center">
+            <AlertCircle className="w-8 h-8 text-yellow-500/80 mb-3" />
             <p className="text-sm text-zinc-400">
               Please select a channel to begin scanning.
             </p>
@@ -1557,7 +1561,7 @@ function EmptyState({ onScan, hasChannel }) {
         ) : (
           <button
             onClick={onScan}
-            className="px-6 sm:px-8 py-3 sm:py-4 bg-white hover:bg-zinc-100 text-black rounded-xl font-bold transition-all inline-flex items-center gap-3 shadow-2xl shadow-white/10 hover:shadow-white/20 active:scale-95"
+            className="px-6 sm:px-8 py-3 sm:py-4 bg-white hover:bg-zinc-100 text-black rounded-[14px] font-semibold transition-all inline-flex items-center gap-3 shadow-sm active:scale-95"
           >
             <Radio className="w-5 h-5" />
             Start Scanning
