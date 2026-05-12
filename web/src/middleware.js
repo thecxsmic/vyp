@@ -1,6 +1,14 @@
-import { clerkMiddleware } from '@clerk/nextjs/server'
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 
-export default clerkMiddleware()
+const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)', '/api(.*)'])
+
+export default clerkMiddleware(async (auth, request) => {
+  // We allow most routes to render so we can show a modal in the layout,
+  // but we might still want to protect API routes or specific paths.
+  if (!isPublicRoute(request)) {
+    // For now, we'll let the layout handle the "Gate" for a better UX (popup feel)
+  }
+})
 
 export const config = {
   matcher: [

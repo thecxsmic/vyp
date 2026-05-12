@@ -59,6 +59,18 @@ async function syncSchema() {
       )
     `);
     console.log("✓ Table 'videos' created or already exists.");
+
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS user_subscriptions (
+        user_id TEXT PRIMARY KEY,
+        subscription_id TEXT,
+        plan_id TEXT,
+        status TEXT,
+        current_period_end INTEGER,
+        updated_at INTEGER
+      )
+    `);
+    console.log("✓ Table 'user_subscriptions' created or already exists.");
     
     console.log("Schema sync complete!");
   } catch (error) {

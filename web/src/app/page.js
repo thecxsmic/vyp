@@ -138,7 +138,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#000000] text-[#ededed] font-sans selection:bg-[#0070f3] selection:text-white pb-24">
+    <div className="min-h-full bg-black text-[#ededed] font-sans selection:bg-[#0070f3] selection:text-white pb-24">
       {/* Global Hover Info Overlay */}
       {hoverInfo && !selectedVideo && (
         <div className="fixed bottom-8 right-8 z-[100] w-72 animate-in fade-in slide-in-from-bottom-4 duration-300 hidden md:block">
@@ -157,20 +157,7 @@ export default function Home() {
         formatNumber={formatNumber} 
       />
 
-      <nav className="border-b border-[#333333] sticky top-0 bg-[#000000]/80 backdrop-blur-md z-50">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center"><div className="w-0 h-0 border-t-[5px] border-t-transparent border-l-[8px] border-l-black border-b-[5px] border-b-transparent ml-0.5"></div></div>
-            <span className="font-bold text-xl tracking-tight text-white uppercase">Vyron</span>
-          </Link>
-          <div className="flex gap-4 md:gap-6 text-[10px] md:text-xs font-bold text-[#888888] uppercase tracking-widest">
-             <Link href="/" className="text-white">Videos</Link>
-             <Link href="/channels" className="hover:text-white transition-colors">Channels</Link>
-          </div>
-        </div>
-      </nav>
-
-      <main className="max-w-5xl mx-auto px-6 py-12">
+      <main className="max-w-6xl mx-auto px-8 py-12">
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-4 bg-gradient-to-b from-white to-[#666666] bg-clip-text text-transparent uppercase">Video Search</h1>
           <p className="text-[#888888] text-sm md:text-lg max-w-xl mx-auto font-medium leading-relaxed px-4">Find videos and see how they are performing across the platform.</p>
