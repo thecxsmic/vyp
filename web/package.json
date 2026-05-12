@@ -11,6 +11,7 @@
     "worker:watch": "while true; do npm run worker; sleep 60; done"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.3.3",
     "@libsql/client": "^0.17.3",
     "chart.js": "^4.5.1",
     "next": "16.2.6",
