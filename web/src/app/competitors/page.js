@@ -63,6 +63,25 @@ function CompetitorsContent() {
     }
   };
 
+  const handleDeleteAnalysis = async (e, analysisId) => {
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to delete this analysis?")) return;
+    
+    try {
+      const res = await fetch("/api/competitors/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ analysisId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchSavedAnalyses();
+      }
+    } catch (err) {
+      console.error("Failed to delete analysis:", err);
+    }
+  };
+
   const fetchUserChannel = async () => {
     try {
       const res = await fetch("/api/youtube/channel/user");
@@ -330,11 +349,17 @@ function CompetitorsContent() {
                         window.history.pushState({}, '', `?${params.toString()}`);
                         analyzeCompetitors(analysis.subject_id);
                       }}
-                      className="shrink-0 flex items-center gap-3 bg-black border border-zinc-800 px-4 py-2 rounded-xl hover:border-zinc-600 transition-all"
+                      className="shrink-0 flex items-center gap-3 bg-black border border-zinc-800 px-4 py-2 rounded-xl hover:border-zinc-600 transition-all group/analysis"
                      >
                         <img src={analysis.subject_thumbnail} className="w-6 h-6 rounded-full" alt="" />
                         <span className="text-[10px] font-bold text-white uppercase tracking-tight">{analysis.subject_title}</span>
                         <span className="text-[8px] text-zinc-600 font-mono">{new Date(analysis.created_at).toLocaleDateString()}</span>
+                        <div 
+                          onClick={(e) => handleDeleteAnalysis(e, analysis.id)}
+                          className="ml-2 opacity-0 group-hover/analysis:opacity-100 p-1 hover:bg-zinc-800 rounded-md transition-all text-zinc-500 hover:text-red-500"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </div>
                      </button>
                    ))}
                 </div>

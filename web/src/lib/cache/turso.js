@@ -451,6 +451,24 @@ export async function getSavedAnalyses(userId) {
 }
 
 /**
+ * Delete a saved analysis
+ */
+export async function deleteAnalysis(userId, analysisId) {
+  if (!process.env.TURSO_DATABASE_URL) return { success: false };
+
+  try {
+    await client.execute({
+      sql: "DELETE FROM saved_analyses WHERE user_id = ? AND id = ?",
+      args: [userId, analysisId],
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("[Turso] Delete Analysis Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
  * Unset the primary user channel
  */
 export async function unsetUserChannel(userId) {
