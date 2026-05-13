@@ -472,10 +472,6 @@ export default function TrendRadar() {
                         <div className="w-2 h-2 rounded-full bg-gradient-to-br from-red-500 to-orange-600 flex-shrink-0" />
                         <span className="text-zinc-400">Trends</span>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-full bg-gradient-to-br from-fuchsia-500 to-violet-600 flex-shrink-0" />
-                        <span className="text-zinc-400">Ideas</span>
-                      </div>
                     </div>
                   </div>
 

@@ -49,7 +49,7 @@ export default function PinnedChannels() {
       {pinned.map((channel) => (
         <div key={channel.id} className="group relative flex items-center">
            <Link 
-            href={`/ideas?channelId=${channel.id}`} 
+            href={`/channels?channelId=${channel.id}`} 
             className="flex-1 flex items-center gap-3 px-4 py-2 rounded-xl text-[11px] font-bold text-[#888] hover:text-white hover:bg-white/5 transition-all truncate"
           >
             <img src={channel.thumbnail} className="w-5 h-5 rounded-full grayscale group-hover:grayscale-0 transition-all" alt="" />
