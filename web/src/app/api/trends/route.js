@@ -3,6 +3,7 @@ import { generateObject } from "ai";
 import { groq } from "@ai-sdk/groq";
 import { z } from "zod";
 import { calculateViralityScore } from "@/lib/ranking/virality";
+import { getTrendRadar, saveTrendRadar } from "@/lib/cache/turso";
 
 const trendSchema = z.object({
   summary: z.object({
@@ -60,6 +61,22 @@ export async function POST(req) {
       };
 
       try {
+        // 0. Check Backend Cache (24 hours)
+        if (channelBased && channelId) {
+          const cachedRadar = await getTrendRadar(channelId);
+          if (cachedRadar) {
+            const now = Math.floor(Date.now() / 1000);
+            const oneDay = 24 * 60 * 60;
+            if (now - cachedRadar.last_updated < oneDay) {
+              console.log(`[Trends API] Using fresh backend cache for ${channelId}`);
+              send({ type: 'step', progress: 100, message: 'Loading from cache...' });
+              send({ type: 'complete', data: cachedRadar.data });
+              controller.close();
+              return;
+            }
+          }
+        }
+
         send({ type: 'step', progress: 10, message: 'Fetching channel context...' });
         
         let channel = null;
@@ -293,6 +310,14 @@ INSTRUCTIONS:
         object.summary.totalVideosAnalyzed = videosWithMetrics.length > 0 ? videosWithMetrics.length : 120;
 
         send({ type: 'complete', data: object });
+
+        // Save to cache
+        if (channelBased && channelId) {
+          saveTrendRadar(channelId, object).catch(err => {
+            console.error("[Trends API] Error saving to Turso:", err);
+          });
+        }
+
         controller.close();
       } catch (err) {
         console.error('Trend radar generation error:', err);

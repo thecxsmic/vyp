@@ -112,6 +112,16 @@ async function syncSchema() {
     `);
     console.log("✓ Table 'saved_analyses' created or already exists.");
 
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS trend_radar (
+        channel_id TEXT PRIMARY KEY,
+        data TEXT,
+        last_updated INTEGER,
+        FOREIGN KEY (channel_id) REFERENCES channels (id)
+      )
+    `);
+    console.log("✓ Table 'trend_radar' created or already exists.");
+
     console.log("Schema sync complete!");  } catch (error) {
     console.error("Error syncing schema:", error);
     process.exit(1);

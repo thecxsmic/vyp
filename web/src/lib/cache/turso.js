@@ -469,6 +469,49 @@ export async function deleteAnalysis(userId, analysisId) {
 }
 
 /**
+ * Save trend radar data
+ */
+export async function saveTrendRadar(channelId, data) {
+  if (!process.env.TURSO_DATABASE_URL) return;
+
+  try {
+    const now = Math.floor(Date.now() / 1000);
+    await client.execute({
+      sql: "INSERT OR REPLACE INTO trend_radar (channel_id, data, last_updated) VALUES (?, ?, ?)",
+      args: [channelId, JSON.stringify(data), now],
+    });
+    console.log(`[Turso] Saved trend radar for channel ${channelId}`);
+  } catch (error) {
+    console.error("[Turso] Save Trend Radar Error:", error);
+  }
+}
+
+/**
+ * Get trend radar data
+ */
+export async function getTrendRadar(channelId) {
+  if (!process.env.TURSO_DATABASE_URL) return null;
+
+  try {
+    const rs = await client.execute({
+      sql: "SELECT data, last_updated FROM trend_radar WHERE channel_id = ?",
+      args: [channelId],
+    });
+
+    if (rs.rows.length === 0) return null;
+
+    const row = rs.rows[0];
+    return {
+      data: JSON.parse(row.data),
+      last_updated: row.last_updated
+    };
+  } catch (error) {
+    console.error("[Turso] Get Trend Radar Error:", error);
+    return null;
+  }
+}
+
+/**
  * Unset the primary user channel
  */
 export async function unsetUserChannel(userId) {
