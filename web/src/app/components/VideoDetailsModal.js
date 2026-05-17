@@ -3,11 +3,14 @@
 import { useState } from "react";
 import { getEarnings } from "@/lib/utils/earnings";
 import Link from "next/link";
+import { Save } from "lucide-react";
+import ResearchNotesModal from "./ResearchNotesModal";
 
 export default function VideoDetailsModal({ selectedVideo, setSelectedVideo, filters, formatNumber }) {
   const [activeTab, setActiveTab] = useState("stats");
   const [copying, setCopying] = useState(false);
   const [copyStates, setCopyStates] = useState({});
+  const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
 
   if (!selectedVideo) return null;
 
@@ -75,9 +78,21 @@ ${item.snippet?.description || item.description || "No description found."}
         <div className="relative h-40 md:h-64 shrink-0">
           <img src={selectedVideo.item.thumbnail || selectedVideo.item.snippet?.thumbnails?.high?.url || selectedVideo.item.snippet?.thumbnails?.medium?.url} className="w-full h-full object-cover" alt="" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#000000] via-[#000000]/40 to-transparent"></div>
-          <button onClick={() => setSelectedVideo(null)} className="absolute top-4 right-4 bg-black/40 hover:bg-black/60 backdrop-blur-md p-2 rounded-full border border-white/10 transition-colors z-10">
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
+          <div className="absolute top-4 right-4 flex gap-2 z-10">
+            <button 
+              onClick={() => setIsNotesModalOpen(true)}
+              className="bg-black/40 hover:bg-black/60 backdrop-blur-md p-2 rounded-full border border-white/10 transition-colors"
+              title="Save to Research Hub"
+            >
+              <Save className="w-4 h-4 text-white" />
+            </button>
+            <button 
+              onClick={() => setSelectedVideo(null)} 
+              className="bg-black/40 hover:bg-black/60 backdrop-blur-md p-2 rounded-full border border-white/10 transition-colors"
+            >
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
           <div className="absolute bottom-4 left-6 md:left-8 right-6">
             <div className={`inline-flex items-center gap-2 bg-gradient-to-r ${selectedVideo.v.color} text-white px-3 py-1 rounded-lg font-bold text-[10px] md:text-xs tracking-widest uppercase mb-2 md:mb-3 shadow-2xl`}>
               <span>{selectedVideo.v.level}</span>
@@ -481,6 +496,24 @@ ${item.snippet?.description || item.description || "No description found."}
           </button>
         </div>
       </div>
+
+      <ResearchNotesModal
+        isOpen={isNotesModalOpen}
+        onClose={() => setIsNotesModalOpen(false)}
+        item={{
+          id: selectedVideo.item.id.videoId || selectedVideo.item.id,
+          type: 'video',
+          title: selectedVideo.item.snippet?.title || selectedVideo.item.title,
+          thumbnail: selectedVideo.item.thumbnail || selectedVideo.item.snippet?.thumbnails?.medium?.url,
+          metadata: {
+            channelId: selectedVideo.item.snippet?.channelId || selectedVideo.item.channelId,
+            channelTitle: selectedVideo.item.snippet?.channelTitle || selectedVideo.item.channelTitle,
+            publishedAt: selectedVideo.item.snippet?.publishedAt || selectedVideo.item.publishedAt,
+            statistics: selectedVideo.item.statistics || {},
+            vScore: selectedVideo.v.score
+          }
+        }}
+      />
     </div>
   );
 }

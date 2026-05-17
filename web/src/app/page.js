@@ -62,7 +62,15 @@ export default function Home() {
       setLoadingStage(100);
       setLoadingText("Scan Complete.");
       setTimeout(() => {
-        setResults(data.items);
+        // Deduplicate initial search results
+        const seen = new Set();
+        const uniqueItems = (data.items || []).filter(item => {
+          const id = item.id?.videoId || item.id;
+          if (!id || seen.has(id)) return false;
+          seen.add(id);
+          return true;
+        });
+        setResults(uniqueItems);
         setNextPageToken(data.nextPageToken);
       }, 300);
     } catch (err) {
@@ -83,7 +91,16 @@ export default function Home() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error?.message || "Failed to load more");
       
-      setResults(prev => [...prev, ...data.items]);
+      setResults(prev => {
+        const combined = [...(prev || []), ...(data.items || [])];
+        const seen = new Set();
+        return combined.filter(item => {
+          const id = item.id?.videoId || item.id;
+          if (!id || seen.has(id)) return false;
+          seen.add(id);
+          return true;
+        });
+      });
       setNextPageToken(data.nextPageToken);
     } catch (err) {
       setError(err.message);

@@ -74,11 +74,19 @@ export async function searchPipeline(filters) {
     const videoIds = fresh.map(v => v.id.videoId);
     const enriched = await fetchVideoStats(videoIds);
     
-    const normalizedResults = enriched.map(item => ({
-      ...item,
-      distance: 0.95,
-      id: typeof item.id === 'string' ? { videoId: item.id } : item.id
-    }));
+    const seenIds = new Set();
+    const normalizedResults = enriched
+      .filter(item => {
+        const id = typeof item.id === 'string' ? item.id : item.id?.videoId;
+        if (!id || seenIds.has(id)) return false;
+        seenIds.add(id);
+        return true;
+      })
+      .map(item => ({
+        ...item,
+        distance: 0.95,
+        id: typeof item.id === 'string' ? { videoId: item.id } : item.id
+      }));
 
     return { items: normalizedResults, nextPageToken };
   }
@@ -145,11 +153,19 @@ export async function searchPipeline(filters) {
     const videoIds = fresh.map(v => v.id.videoId);
     const enriched = await fetchVideoStats(videoIds);
     
-    const normalizedResults = enriched.map(item => ({
-      ...item,
-      distance: 0.95, // Default similarity for direct YouTube search (high relevance)
-      id: typeof item.id === 'string' ? { videoId: item.id } : item.id
-    }));
+    const seenIds = new Set();
+    const normalizedResults = enriched
+      .filter(item => {
+        const id = typeof item.id === 'string' ? item.id : item.id?.videoId;
+        if (!id || seenIds.has(id)) return false;
+        seenIds.add(id);
+        return true;
+      })
+      .map(item => ({
+        ...item,
+        distance: 0.95, // Default similarity for direct YouTube search (high relevance)
+        id: typeof item.id === 'string' ? { videoId: item.id } : item.id
+      }));
 
     queueBackgroundSave(cacheKey, normalizedResults);
 
