@@ -1,12 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, FileText, Video, User, Lightbulb, BarChart3, Loader2 } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import 'react-quill-new/dist/quill.snow.css';
+
+// Dynamically import ReactQuill to avoid SSR issues
+const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
 export default function ResearchNotesModal({ isOpen, onClose, item, onSave }) {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Quill modules configuration
+  const modules = useMemo(() => ({
+    toolbar: [
+      [{ 'header': [1, 2, false] }],
+      ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      ['link', 'clean']
+    ],
+  }), []);
 
   if (!isOpen) return null;
 
@@ -17,17 +32,18 @@ export default function ResearchNotesModal({ isOpen, onClose, item, onSave }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          type: item.type,
-          reference_id: item.id || item.channelId,
-          title: item.title,
+          type: item?.type || 'note',
+          reference_id: item?.id || item?.channelId || null,
+          title: item?.title || 'Quick Note',
           content: content,
-          metadata: item.metadata || {}
+          metadata: item?.metadata || {}
         })
       });
       const data = await res.json();
       if (data.success) {
         if (onSave) onSave(data.id);
         onClose();
+        setContent(''); // Reset content on successful save
       }
     } catch (err) {
       console.error('Failed to save research note:', err);
@@ -37,7 +53,7 @@ export default function ResearchNotesModal({ isOpen, onClose, item, onSave }) {
   };
 
   const getIcon = () => {
-    switch (item.type) {
+    switch (item?.type) {
       case 'video': return <Video className="w-5 h-5 text-blue-500" />;
       case 'channel': return <User className="w-5 h-5 text-purple-500" />;
       case 'idea': return <Lightbulb className="w-5 h-5 text-yellow-500" />;
@@ -48,7 +64,7 @@ export default function ResearchNotesModal({ isOpen, onClose, item, onSave }) {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+      <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 sm:p-6">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -70,8 +86,10 @@ export default function ResearchNotesModal({ isOpen, onClose, item, onSave }) {
                 {getIcon()}
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">Save to Research Hub</h3>
-                <p className="text-xs text-zinc-500 truncate max-w-[300px]">{item.title}</p>
+                <h3 className="text-lg font-bold text-white">
+                  {item ? 'Save to Research Hub' : 'Create Quick Note'}
+                </h3>
+                {item?.title && <p className="text-xs text-zinc-500 truncate max-w-[300px]">{item.title}</p>}
               </div>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-zinc-800 rounded-full transition-colors">
@@ -81,27 +99,32 @@ export default function ResearchNotesModal({ isOpen, onClose, item, onSave }) {
 
           {/* Content */}
           <div className="p-6 space-y-4">
-            <div className="space-y-2">
+            <div className="space-y-2 rich-text-editor">
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-1">Research Notes</label>
-              <textarea
-                autoFocus
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Write your observations, hooks, or notes about this item..."
-                className="w-full h-48 bg-black/40 border border-zinc-800 rounded-2xl p-4 text-sm text-zinc-300 focus:outline-none focus:ring-1 focus:ring-white/20 transition-all resize-none"
-              />
+              <div className="bg-black/40 border border-zinc-800 rounded-2xl overflow-hidden">
+                <ReactQuill 
+                  theme="snow"
+                  value={content}
+                  onChange={setContent}
+                  modules={modules}
+                  placeholder="Write your observations, hooks, or notes about this item..."
+                  className="quill-dark"
+                />
+              </div>
             </div>
 
-            <div className="bg-zinc-800/30 border border-zinc-800/50 rounded-2xl p-4">
-               <p className="text-[10px] font-medium text-zinc-500 mb-2 uppercase tracking-tight">Inter-linked Preview</p>
-               <div className="flex items-center gap-3">
-                  {item.thumbnail && <img src={item.thumbnail} className="w-12 h-12 rounded-lg object-cover" alt="" />}
-                  <div className="min-w-0">
-                     <p className="text-xs font-bold text-zinc-200 truncate">{item.title}</p>
-                     <p className="text-[10px] text-zinc-500 capitalize">{item.type} • Linked Reference</p>
-                  </div>
-               </div>
-            </div>
+            {item && (
+              <div className="bg-zinc-800/30 border border-zinc-800/50 rounded-2xl p-4">
+                <p className="text-[10px] font-medium text-zinc-500 mb-2 uppercase tracking-tight">Inter-linked Preview</p>
+                <div className="flex items-center gap-3">
+                    {item.thumbnail && <img src={item.thumbnail} className="w-12 h-12 rounded-lg object-cover" alt="" />}
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-zinc-200 truncate">{item.title}</p>
+                      <p className="text-[10px] text-zinc-500 capitalize">{item.type} • Linked Reference</p>
+                    </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Footer */}
@@ -123,6 +146,45 @@ export default function ResearchNotesModal({ isOpen, onClose, item, onSave }) {
           </div>
         </motion.div>
       </div>
+      <style jsx global>{`
+        .quill-dark .ql-toolbar {
+          background: #18181b;
+          border-color: #27272a !important;
+          border-top-left-radius: 1rem;
+          border-top-right-radius: 1rem;
+        }
+        .quill-dark .ql-container {
+          border-color: #27272a !important;
+          border-bottom-left-radius: 1rem;
+          border-bottom-right-radius: 1rem;
+          height: 250px;
+          font-family: inherit;
+          font-size: 0.875rem;
+          background: transparent;
+        }
+        .quill-dark .ql-stroke {
+          stroke: #71717a !important;
+        }
+        .quill-dark .ql-fill {
+          fill: #71717a !important;
+        }
+        .quill-dark .ql-picker {
+          color: #71717a !important;
+        }
+        .quill-dark .ql-editor.ql-blank::before {
+          color: #3f3f46 !important;
+          font-style: normal;
+        }
+        .quill-dark .ql-editor {
+          color: #e4e4e7;
+        }
+        .quill-dark .ql-active .ql-stroke {
+          stroke: #fff !important;
+        }
+        .quill-dark .ql-active .ql-fill {
+          fill: #fff !important;
+        }
+      `}</style>
     </AnimatePresence>
   );
 }
