@@ -60,6 +60,18 @@ export default function TrendRadar() {
   const [lastScanTime, setLastScanTime] = useState(null);
   const [hoveredNode, setHoveredNode] = useState(null);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const selectedChannel = channels.data.find(c => c.id === channels.selectedId);
   
