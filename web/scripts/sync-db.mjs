@@ -122,6 +122,21 @@ async function syncSchema() {
     `);
     console.log("✓ Table 'trend_radar' created or already exists.");
 
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS library_items (
+        id TEXT PRIMARY KEY,
+        user_id TEXT,
+        type TEXT,
+        reference_id TEXT,
+        title TEXT,
+        content TEXT,
+        metadata TEXT,
+        created_at INTEGER,
+        updated_at INTEGER
+      )
+    `);
+    console.log("✓ Table 'library_items' created or already exists.");
+
     console.log("Schema sync complete!");  } catch (error) {
     console.error("Error syncing schema:", error);
     process.exit(1);

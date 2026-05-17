@@ -43,6 +43,7 @@ import {
   X
 } from 'lucide-react';
 import { useTitle } from '@/lib/hooks/titles';
+import ResearchNotesModal from './ResearchNotesModal';
 
 const CACHE_KEY_PREFIX = 'trend_radar_cache_';
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
@@ -61,6 +62,8 @@ export default function TrendRadar() {
   const [hoveredNode, setHoveredNode] = useState(null);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
+  const [selectedNoteItem, setSelectedNoteItem] = useState(null);
 
   // Detect mobile
   useEffect(() => {
@@ -336,6 +339,11 @@ export default function TrendRadar() {
   }, [mindMapNodes]);
 
   const handleNodeClick = useCallback((node) => {
+    const onSave = (item) => {
+      setSelectedNoteItem(item);
+      setIsNotesModalOpen(true);
+    };
+
     if (node.type === 'center') {
       openBottomSheet({
         id: 'center-overview',
@@ -350,7 +358,7 @@ export default function TrendRadar() {
         title: 'Quick Win Opportunity',
         description: 'Low-hanging fruit for viral content',
         size: 'default',
-        content: <QuickWinDetails data={node.data} />
+        content: <QuickWinDetails data={node.data} onSave={onSave} />
       });
     } else if (node.type === 'trend') {
       openBottomSheet({
@@ -358,7 +366,7 @@ export default function TrendRadar() {
         title: 'Emerging Trend',
         description: 'Capitalize on this trending topic',
         size: 'default',
-        content: <TrendDetails data={node.data} />
+        content: <TrendDetails data={node.data} onSave={onSave} />
       });
     } else if (node.type === 'videoIdea') {
       openBottomSheet({
@@ -366,18 +374,32 @@ export default function TrendRadar() {
         title: 'Video Idea',
         description: 'Generated video concept',
         size: 'default',
-        content: <VideoIdeaDetails data={node.data} />
+        content: <VideoIdeaDetails data={node.data} onSave={onSave} />
       });
     }
   }, [data, openBottomSheet]);
 
   return (
     <div className="flex flex-col flex-1 h-full bg-[#000] text-white overflow-hidden">
+      {/* Research Notes Modal */}
+      <ResearchNotesModal
+        isOpen={isNotesModalOpen}
+        onClose={() => setIsNotesModalOpen(false)}
+        item={selectedNoteItem}
+      />
+
       {/* Main Content - Flex fill remaining space */}
       <div className="flex-1 h-full relative overflow-hidden">
         {data ? (
           isMobile ? (
-            <MobileCardView data={data} onNodeClick={handleNodeClick} />
+            <MobileCardView 
+              data={data} 
+              onNodeClick={handleNodeClick} 
+              onSave={(item) => {
+                setSelectedNoteItem(item);
+                setIsNotesModalOpen(true);
+              }}
+            />
           ) : (
             <MindMap2D 
               nodes={allNodes}
@@ -511,7 +533,7 @@ export default function TrendRadar() {
 
 // ============= MOBILE CARD VIEW COMPONENT =============
 
-function MobileCardView({ data, onNodeClick }) {
+function MobileCardView({ data, onNodeClick, onSave }) {
   return (
     <div className="h-full overflow-y-auto px-4 py-6 space-y-8 no-scrollbar pb-32">
       {/* Overview Card */}
@@ -523,13 +545,23 @@ function MobileCardView({ data, onNodeClick }) {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          onClick={() => onNodeClick({ type: 'center', data })}
           className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-5 relative overflow-hidden group active:scale-[0.98] transition-transform"
         >
-          <div className="absolute top-0 right-0 p-4">
-             <ArrowUpRight className="w-4 h-4 text-zinc-600" />
+          <div className="absolute top-0 right-0 p-4 flex gap-2">
+             <button 
+               onClick={(e) => {
+                 e.stopPropagation();
+                 onSave({ type: 'analysis', title: 'Market Overview', metadata: data });
+               }}
+               className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/5"
+             >
+                <Save className="w-4 h-4 text-zinc-400" />
+             </button>
+             <button onClick={() => onNodeClick({ type: 'center', data })}>
+                <ArrowUpRight className="w-4 h-4 text-zinc-600" />
+             </button>
           </div>
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-4 mb-4" onClick={() => onNodeClick({ type: 'center', data })}>
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
               <Radio className="w-6 h-6 text-white" />
             </div>
@@ -567,17 +599,29 @@ function MobileCardView({ data, onNodeClick }) {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: idx * 0.1 }}
-              onClick={() => onNodeClick({ type: 'quickWin', data: win })}
               className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 flex items-center gap-4 active:scale-[0.98] transition-transform"
             >
-              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${win.effort === 'low' ? 'from-green-500 to-emerald-600' : 'from-yellow-500 to-orange-600'} flex items-center justify-center flex-shrink-0`}>
+              <div 
+                className={`w-10 h-10 rounded-xl bg-gradient-to-br ${win.effort === 'low' ? 'from-green-500 to-emerald-600' : 'from-yellow-500 to-orange-600'} flex items-center justify-center flex-shrink-0 cursor-pointer`}
+                onClick={() => onNodeClick({ type: 'quickWin', data: win })}
+              >
                 <Lightbulb className="w-5 h-5 text-white" />
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onNodeClick({ type: 'quickWin', data: win })}>
                 <h3 className="text-xs font-bold text-zinc-200 truncate">{win.idea}</h3>
                 <p className="text-[10px] text-zinc-500">{win.timing}</p>
               </div>
-              <ArrowUpRight className="w-4 h-4 text-zinc-700" />
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => onSave({ type: 'idea', title: win.idea, metadata: win })}
+                  className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/5"
+                >
+                  <Save className="w-4 h-4 text-zinc-400" />
+                </button>
+                <button onClick={() => onNodeClick({ type: 'quickWin', data: win })}>
+                  <ArrowUpRight className="w-4 h-4 text-zinc-700" />
+                </button>
+              </div>
             </motion.div>
           ))}
         </div>
@@ -596,21 +640,33 @@ function MobileCardView({ data, onNodeClick }) {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: idx * 0.1 }}
-              onClick={() => onNodeClick({ type: 'trend', data: trend })}
-              className="min-w-[200px] bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 active:scale-[0.98] transition-transform"
+              className="min-w-[200px] bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 active:scale-[0.98] transition-transform relative"
             >
               <div className="flex justify-between items-start mb-3">
-                <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${trend.momentum === 'hot' ? 'from-red-500 to-orange-600' : 'from-blue-500 to-cyan-600'} flex items-center justify-center`}>
+                <div 
+                  className={`w-8 h-8 rounded-lg bg-gradient-to-br ${trend.momentum === 'hot' ? 'from-red-500 to-orange-600' : 'from-blue-500 to-cyan-600'} flex items-center justify-center cursor-pointer`}
+                  onClick={() => onNodeClick({ type: 'trend', data: trend })}
+                >
                   <Flame className="w-4 h-4 text-white" />
                 </div>
-                <div className="bg-black/40 px-2 py-0.5 rounded-full border border-white/5">
-                  <span className="text-[9px] font-bold text-yellow-500">{trend.viralScore}</span>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => onSave({ type: 'idea', title: trend.topic, metadata: trend })}
+                    className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/5"
+                  >
+                    <Save className="w-3.5 h-3.5 text-zinc-400" />
+                  </button>
+                  <div className="bg-black/40 px-2 py-0.5 rounded-full border border-white/5">
+                    <span className="text-[9px] font-bold text-yellow-500">{trend.viralScore}</span>
+                  </div>
                 </div>
               </div>
-              <h3 className="text-xs font-bold text-zinc-200 mb-1 line-clamp-1">{trend.topic}</h3>
-              <p className="text-[10px] text-zinc-500 truncate mb-3">{trend.estimatedViews} potential</p>
-              <div className="bg-white/5 rounded-lg p-2">
-                <p className="text-[9px] text-zinc-400 line-clamp-2 italic">"{trend.actionableIdea}"</p>
+              <div className="cursor-pointer" onClick={() => onNodeClick({ type: 'trend', data: trend })}>
+                <h3 className="text-xs font-bold text-zinc-200 mb-1 line-clamp-1">{trend.topic}</h3>
+                <p className="text-[10px] text-zinc-500 truncate mb-3">{trend.estimatedViews} potential</p>
+                <div className="bg-white/5 rounded-lg p-2">
+                  <p className="text-[9px] text-zinc-400 line-clamp-2 italic">"{trend.actionableIdea}"</p>
+                </div>
               </div>
             </motion.div>
           ))}
@@ -630,24 +686,33 @@ function MobileCardView({ data, onNodeClick }) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
-              onClick={() => onNodeClick({ type: 'videoIdea', data: idea })}
               className="bg-gradient-to-br from-fuchsia-900/10 to-violet-900/10 backdrop-blur-xl border border-fuchsia-500/10 rounded-2xl p-5 active:scale-[0.98] transition-transform"
             >
               <div className="flex justify-between items-start mb-3">
-                <h3 className="text-sm font-bold text-white max-w-[80%] leading-tight">{idea.title}</h3>
-                <div className="w-8 h-8 rounded-lg bg-fuchsia-500/10 flex items-center justify-center">
-                  <Video className="w-4 h-4 text-fuchsia-500" />
+                <h3 className="text-sm font-bold text-white max-w-[70%] leading-tight cursor-pointer" onClick={() => onNodeClick({ type: 'videoIdea', data: idea })}>{idea.title}</h3>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => onSave({ type: 'idea', title: idea.title, metadata: idea })}
+                    className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/5"
+                  >
+                    <Save className="w-4 h-4 text-zinc-400" />
+                  </button>
+                  <div className="w-8 h-8 rounded-lg bg-fuchsia-500/10 flex items-center justify-center cursor-pointer" onClick={() => onNodeClick({ type: 'videoIdea', data: idea })}>
+                    <Video className="w-4 h-4 text-fuchsia-500" />
+                  </div>
                 </div>
               </div>
-              <p className="text-xs text-zinc-400 line-clamp-2 mb-4 leading-relaxed">{idea.description}</p>
-              <div className="flex items-center justify-between">
-                 <div className="flex items-center gap-1.5">
-                    <Eye className="w-3 h-3 text-zinc-600" />
-                    <span className="text-[10px] font-bold text-zinc-500">{idea.predictedViews} Views</span>
-                 </div>
-                 <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${idea.difficulty === 'Easy' ? 'bg-green-500/5 text-green-500 border-green-500/10' : 'bg-yellow-500/5 text-yellow-500 border-yellow-500/10'}`}>
-                    {idea.difficulty}
-                 </span>
+              <div className="cursor-pointer" onClick={() => onNodeClick({ type: 'videoIdea', data: idea })}>
+                <p className="text-xs text-zinc-400 line-clamp-2 mb-4 leading-relaxed">{idea.description}</p>
+                <div className="flex items-center justify-between">
+                   <div className="flex items-center gap-1.5">
+                      <Eye className="w-3 h-3 text-zinc-600" />
+                      <span className="text-[10px] font-bold text-zinc-500">{idea.predictedViews} Views</span>
+                   </div>
+                   <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${idea.difficulty === 'Easy' ? 'bg-green-500/5 text-green-500 border-green-500/10' : 'bg-yellow-500/5 text-yellow-500 border-yellow-500/10'}`}>
+                      {idea.difficulty}
+                   </span>
+                </div>
               </div>
             </motion.div>
           ))}
@@ -1512,7 +1577,7 @@ function CenterNodeDetails({ data }) {
   );
 }
 
-function QuickWinDetails({ data }) {
+function QuickWinDetails({ data, onSave }) {
   const effortColors = {
     low: 'from-green-500/20 to-emerald-600/20 text-green-500',
     medium: 'from-yellow-500/20 to-orange-600/20 text-yellow-500',
@@ -1530,6 +1595,12 @@ function QuickWinDetails({ data }) {
             <h3 className="text-lg font-bold text-white mb-1">{data.idea}</h3>
             <p className="text-sm text-zinc-400">{data.timing}</p>
           </div>
+          <button 
+            onClick={() => onSave({ type: 'idea', title: data.idea, metadata: data })}
+            className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/5"
+          >
+            <Save className="w-4 h-4 text-zinc-400" />
+          </button>
         </div>
         
         <div className="bg-black/40 border border-white/5 rounded-lg p-4">
@@ -1575,7 +1646,7 @@ function QuickWinDetails({ data }) {
   );
 }
 
-function TrendDetails({ data }) {
+function TrendDetails({ data, onSave }) {
   const momentumColors = {
     rising: 'from-blue-500/20 to-cyan-600/20 text-blue-500',
     hot: 'from-red-500/20 to-orange-600/20 text-red-500',
@@ -1607,12 +1678,20 @@ function TrendDetails({ data }) {
               </span>
             </div>
           </div>
-          <div className="text-right">
-            <div className="flex items-center gap-1 text-yellow-500 mb-1">
-              <Zap className="w-5 h-5 fill-current" />
-              <span className="text-2xl font-bold">{data.viralScore}</span>
+          <div className="flex flex-col items-end gap-2">
+            <button 
+              onClick={() => onSave({ type: 'idea', title: data.topic, metadata: data })}
+              className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/5"
+            >
+              <Save className="w-4 h-4 text-zinc-400" />
+            </button>
+            <div className="text-right">
+              <div className="flex items-center gap-1 text-yellow-500 mb-1">
+                <Zap className="w-5 h-5 fill-current" />
+                <span className="text-2xl font-bold">{data.viralScore}</span>
+              </div>
+              <p className="text-xs text-zinc-500">Viral Score</p>
             </div>
-            <p className="text-xs text-zinc-500">Viral Score</p>
           </div>
         </div>
 
@@ -1647,7 +1726,7 @@ function TrendDetails({ data }) {
   );
 }
 
-function VideoIdeaDetails({ data }) {
+function VideoIdeaDetails({ data, onSave }) {
   const difficultyColors = {
     Easy: 'from-green-500/20 to-emerald-600/20 text-green-500',
     Medium: 'from-yellow-500/20 to-orange-600/20 text-yellow-500',
@@ -1667,6 +1746,12 @@ function VideoIdeaDetails({ data }) {
               {data.difficulty}
             </span>
           </div>
+          <button 
+            onClick={() => onSave({ type: 'idea', title: data.title, metadata: data })}
+            className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/5"
+          >
+            <Save className="w-4 h-4 text-zinc-400" />
+          </button>
         </div>
 
         <p className="text-sm text-zinc-400 leading-relaxed mb-4">{data.description}</p>

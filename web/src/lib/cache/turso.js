@@ -512,6 +512,71 @@ export async function getTrendRadar(channelId) {
 }
 
 /**
+ * Save an item to the Research Library
+ */
+export async function saveLibraryItem(userId, { id, type, reference_id, title, content, metadata }) {
+  if (!process.env.TURSO_DATABASE_URL) return { success: false };
+
+  try {
+    const itemId = id || Math.random().toString(36).substring(2, 15);
+    const now = Date.now();
+    await client.execute({
+      sql: `INSERT OR REPLACE INTO library_items (id, user_id, type, reference_id, title, content, metadata, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [itemId, userId, type, reference_id || null, title, content || "", JSON.stringify(metadata || {}), now, now],
+    });
+    return { success: true, id: itemId };
+  } catch (error) {
+    console.error("[Turso] Save Library Item Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Get all library items for a user
+ */
+export async function getLibraryItems(userId, type = null) {
+  if (!process.env.TURSO_DATABASE_URL) return [];
+
+  try {
+    let sql = "SELECT * FROM library_items WHERE user_id = ? ORDER BY created_at DESC";
+    let args = [userId];
+
+    if (type) {
+      sql = "SELECT * FROM library_items WHERE user_id = ? AND type = ? ORDER BY created_at DESC";
+      args = [userId, type];
+    }
+
+    const rs = await client.execute({ sql, args });
+    return rs.rows.map(row => ({
+      ...row,
+      metadata: JSON.parse(row.metadata)
+    }));
+  } catch (error) {
+    console.error("[Turso] Get Library Items Error:", error);
+    return [];
+  }
+}
+
+/**
+ * Delete a library item
+ */
+export async function deleteLibraryItem(userId, itemId) {
+  if (!process.env.TURSO_DATABASE_URL) return { success: false };
+
+  try {
+    await client.execute({
+      sql: "DELETE FROM library_items WHERE user_id = ? AND id = ?",
+      args: [userId, itemId],
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("[Turso] Delete Library Item Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
  * Unset the primary user channel
  */
 export async function unsetUserChannel(userId) {

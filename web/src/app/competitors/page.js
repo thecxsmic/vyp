@@ -4,6 +4,8 @@ import { useState, useEffect, Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { EngagementPieChart, CompetitorRadarChart, VideoPerformanceScatter, CompetitorBarComparison } from "../components/ChannelCharts";
+import ResearchNotesModal from "../components/ResearchNotesModal";
+import { Save } from "lucide-react";
 
 function CompetitorsContent() {
   const searchParams = useSearchParams();
@@ -17,6 +19,9 @@ function CompetitorsContent() {
   const [savedAnalyses, setSavedAnalyses] = useState([]);
   const [saveLoading, setSaveLoading] = useState(false);
   const [userChannel, setUserChannel] = useState(null);
+
+  const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
+  const [selectedNoteItem, setSelectedNoteItem] = useState(null);
 
   // Define helper functions first to avoid reference errors
   const fetchUserChannelInfo = async () => {
@@ -230,6 +235,11 @@ function CompetitorsContent() {
 
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-white selection:text-black">
+      <ResearchNotesModal
+        isOpen={isNotesModalOpen}
+        onClose={() => setIsNotesModalOpen(false)}
+        item={selectedNoteItem}
+      />
       {/* Vercel-style Header */}
       <header className="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-zinc-800">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -489,8 +499,22 @@ function CompetitorsContent() {
                                    ))}
                                 </div>
                              </div>
-                             <div className="pt-6 border-t border-zinc-900">
+                             <div className="pt-6 border-t border-zinc-900 flex items-center justify-between">
                                 <Link href={`/channels?channelId=${stat.id}`} className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 hover:text-white transition-colors">View Deep Content Audit →</Link>
+                                <button 
+                                  onClick={() => {
+                                    setSelectedNoteItem({
+                                      id: stat.id,
+                                      type: 'channel',
+                                      title: stat.title,
+                                      metadata: { isBase: stat.isBase }
+                                    });
+                                    setIsNotesModalOpen(true);
+                                  }}
+                                  className="p-2 bg-white/5 hover:bg-white/10 rounded-lg border border-white/5 transition-colors"
+                                >
+                                  <Save className="w-3.5 h-3.5 text-zinc-500" />
+                                </button>
                              </div>
                           </div>
                        </div>

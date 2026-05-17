@@ -2,9 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { calculateViralityScore } from "@/lib/ranking/virality";
+import { Bookmark, Save } from "lucide-react";
+import ResearchNotesModal from "./ResearchNotesModal";
 
 export default function VideoCard({ item, setHoverInfo, setSelectedVideo, formatNumber }) {
   const [color, setColor] = useState("0, 112, 243"); // Default blue
+  const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
   const v = calculateViralityScore(item);
 
   useEffect(() => {
@@ -138,23 +141,49 @@ export default function VideoCard({ item, setHoverInfo, setSelectedVideo, format
                 <span className="text-lg md:text-xl font-black text-white tracking-tighter" style={{ color: `rgba(${color}, 1)` }}>{v.engagement}<span className="text-[10px] text-[#666666] ml-1">%</span></span>
               </div>
            </div>
-           <button 
-            onClick={() => setSelectedVideo({ item, v, dominantColor: color })} 
-            className="w-full sm:w-auto shrink-0 text-[10px] font-black tracking-[0.2em] uppercase bg-white text-black px-8 py-3 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl"
-            onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = `rgba(${color}, 1)`;
-                e.currentTarget.style.color = 'white';
-            }}
-            onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'white';
-                e.currentTarget.style.color = 'black';
-            }}
-            style={{ boxShadow: `0 10px 30px rgba(${color}, 0.3)` }}
-           >
-            View Details
-           </button>
+           <div className="flex gap-4 w-full sm:w-auto">
+              <button 
+                onClick={() => setIsNotesModalOpen(true)}
+                className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/5 group/save"
+              >
+                <Save className="w-5 h-5 text-zinc-500 group-hover/save:text-white transition-colors" />
+              </button>
+              <button 
+                onClick={() => setSelectedVideo({ item, v, dominantColor: color })} 
+                className="w-full sm:w-auto shrink-0 text-[10px] font-black tracking-[0.2em] uppercase bg-white text-black px-8 py-3 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl"
+                onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = `rgba(${color}, 1)`;
+                    e.currentTarget.style.color = 'white';
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'white';
+                    e.currentTarget.style.color = 'black';
+                }}
+                style={{ boxShadow: `0 10px 30px rgba(${color}, 0.3)` }}
+              >
+                View Details
+              </button>
+           </div>
         </div>
       </div>
+
+      <ResearchNotesModal
+        isOpen={isNotesModalOpen}
+        onClose={() => setIsNotesModalOpen(false)}
+        item={{
+          id: item.id.videoId || item.id,
+          type: 'video',
+          title: item.snippet.title,
+          thumbnail: item.snippet.thumbnails.medium.url,
+          metadata: {
+            channelId: item.snippet.channelId,
+            channelTitle: item.snippet.channelTitle,
+            publishedAt: item.snippet.publishedAt,
+            statistics: item.statistics || {},
+            vScore: v.score
+          }
+        }}
+      />
     </div>
   );
 }
