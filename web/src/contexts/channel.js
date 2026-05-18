@@ -6,35 +6,32 @@ const ChannelContext = createContext();
 
 export function ChannelProvider({ children }) {
   const [channels, setChannels] = useState({ data: [], selectedId: null });
+  const [userChannel, setUserChannel] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const fetchChannels = async () => {
     setLoading(true);
     try {
-      // Fetch pinned channels as a proxy for "available channels" for now
+      // Fetch pinned channels
       const res = await fetch("/api/youtube/channel/pin");
       const data = await res.json();
-      if (data.success) {
-        const items = data.items || [];
-        setChannels(prev => ({
-          data: items,
-          selectedId: items.length > 0 ? (prev.selectedId || items[0].id) : null
-        }));
-      }
+      const pinnedItems = data.success ? (data.items || []) : [];
       
-      // Also check for user's primary channel
+      // Check for user's primary channel
       const userRes = await fetch("/api/youtube/channel/user");
       const userData = await userRes.json();
-      if (userData.success && userData.channel) {
-        setChannels(prev => {
-          const exists = prev.data.find(c => c.id === userData.channel.id);
-          const newData = exists ? prev.data : [userData.channel, ...prev.data];
-          return {
-            data: newData,
-            selectedId: prev.selectedId || userData.channel.id
-          };
-        });
-      }
+      const primaryChannel = userData.success && userData.channel ? userData.channel : null;
+      
+      setUserChannel(primaryChannel);
+      
+      const allChannels = primaryChannel 
+        ? [primaryChannel, ...pinnedItems.filter(p => p.id !== primaryChannel.id)]
+        : pinnedItems;
+
+      setChannels(prev => ({
+        data: allChannels,
+        selectedId: prev.selectedId || (primaryChannel ? primaryChannel.id : (allChannels.length > 0 ? allChannels[0].id : null))
+      }));
     } catch (err) {
       console.error("Failed to fetch channels for context:", err);
     } finally {
@@ -53,7 +50,7 @@ export function ChannelProvider({ children }) {
   };
 
   return (
-    <ChannelContext.Provider value={{ channels, selectChannel, loading, refreshChannels: fetchChannels }}>
+    <ChannelContext.Provider value={{ channels, userChannel, selectChannel, loading, refreshChannels: fetchChannels }}>
       {children}
     </ChannelContext.Provider>
   );

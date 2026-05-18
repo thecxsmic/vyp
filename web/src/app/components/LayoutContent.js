@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { UserButton } from "@clerk/nextjs";
-import { Plus, Menu, X, Search, Zap, Users, Trophy, BookOpen, BarChart3, Activity } from 'lucide-react';
+import { Plus, Menu, X, Search, Zap, Users, Trophy, BookOpen, BarChart3, Activity, Radio } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useChannel } from '@/contexts/channel';
 import PinnedChannels from "./PinnedChannels";
 import ResearchNotesModal from "./ResearchNotesModal";
+import SetupUserChannelModal from "./SetupUserChannelModal";
 
 const navItems = [
   { name: 'Search', href: '/', icon: Search },
@@ -19,7 +21,9 @@ const navItems = [
 
 export default function LayoutContent({ children }) {
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
+  const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { channels, userChannel, selectChannel, refreshChannels } = useChannel();
   const pathname = usePathname();
 
   // Close mobile menu on route change
@@ -65,6 +69,41 @@ export default function LayoutContent({ children }) {
         })}
 
         <div className="pt-8 pb-2 px-3">
+          <p className="font-display text-[10px] font-bold text-accents-4 uppercase tracking-wider">My Channel</p>
+        </div>
+        
+        {userChannel ? (
+          <div className="px-2">
+            <button 
+              onClick={() => selectChannel(userChannel.id)}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all relative group ${
+                channels.selectedId === userChannel.id 
+                  ? 'text-white bg-white/[0.08]' 
+                  : 'text-accents-4 hover:text-white hover:bg-white/[0.04]'
+              }`}
+            >
+              <div className="w-4 h-4 rounded-full overflow-hidden border border-white/10 shrink-0">
+                <img src={userChannel.thumbnail} className="w-full h-full object-cover" alt="" />
+              </div>
+              <span className="truncate">{userChannel.title}</span>
+              {channels.selectedId === userChannel.id && (
+                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-geist-success shadow-[0_0_8px_rgba(0,112,243,0.5)]"></div>
+              )}
+            </button>
+          </div>
+        ) : (
+          <div className="px-2">
+            <button 
+              onClick={() => setIsSetupModalOpen(true)}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider text-accents-3 hover:text-white hover:bg-white/5 transition-all group text-left"
+            >
+              <Radio className="w-4 h-4" />
+              Connect Channel
+            </button>
+          </div>
+        )}
+
+        <div className="pt-8 pb-2 px-3">
           <p className="font-display text-[10px] font-bold text-accents-4 uppercase tracking-wider">Research</p>
         </div>
         
@@ -104,6 +143,15 @@ export default function LayoutContent({ children }) {
         isOpen={isNotesModalOpen} 
         onClose={() => setIsNotesModalOpen(false)} 
       />
+
+      {isSetupModalOpen && (
+        <SetupUserChannelModal 
+          onChannelSet={() => {
+            setIsSetupModalOpen(false);
+            refreshChannels();
+          }} 
+        />
+      )}
 
       {/* Desktop Sidebar */}
       <aside className="w-64 border-r border-accents-2 bg-accents-1 flex flex-col shrink-0 hidden md:flex">
