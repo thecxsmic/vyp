@@ -9,7 +9,7 @@ import VideoCard from "../components/VideoCard";
 import VideoDetailsModal from "../components/VideoDetailsModal";
 import ResearchNotesModal from "../components/ResearchNotesModal";
 import Link from "next/link";
-import { Save, Edit3, Search, Zap, BarChart3, TrendingUp, Target, Users, LayoutDashboard, SlidersHorizontal, ArrowRight, Activity, DollarSign, Video } from "lucide-react";
+import { Save, Edit3, Search, Zap, BarChart3, TrendingUp, Target, Users, LayoutDashboard, SlidersHorizontal, ArrowRight, Activity, DollarSign, Video, Pin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 function ChannelsContent() {
@@ -28,6 +28,8 @@ function ChannelsContent() {
   const [hasSearched, setHasSearched] = useState(false);
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
   const [savedChannelItem, setSavedChannelItem] = useState(null);
+  const [isPinned, setIsPinned] = useState(false);
+  const [pinnedIds, setPinnedIds] = useState(new Set());
 
   useEffect(() => {
     const channelId = searchParams.get("channelId");
@@ -35,15 +37,30 @@ function ChannelsContent() {
       setHasSearched(true);
       selectChannel(channelId);
     }
+    fetchPinnedIds();
   }, [searchParams]);
 
   useEffect(() => {
     if (analysisData?.channel) {
       checkChannelSavedStatus(analysisData.channel.id);
+      checkPinnedStatus(analysisData.channel.id);
     } else {
       setSavedChannelItem(null);
+      setIsPinned(false);
     }
   }, [analysisData]);
+
+  const fetchPinnedIds = async () => {
+    try {
+      const res = await fetch('/api/youtube/channel/pin');
+      const data = await res.json();
+      if (data.success) {
+        setPinnedIds(new Set(data.items.map(item => item.id)));
+      }
+    } catch (err) {
+      console.error("Failed to fetch pinned IDs:", err);
+    }
+  };
 
   const checkChannelSavedStatus = async (channelId) => {
     try {
@@ -56,6 +73,47 @@ function ChannelsContent() {
       }
     } catch (err) {
       console.error("Failed to check channel saved status:", err);
+    }
+  };
+
+  const checkPinnedStatus = async (channelId) => {
+    try {
+      const res = await fetch(`/api/youtube/channel/pin?channelId=${channelId}`);
+      const data = await res.json();
+      if (data.success) {
+        setIsPinned(data.isPinned);
+      }
+    } catch (err) {
+      console.error("Failed to check pinned status:", err);
+    }
+  };
+
+  const handleTogglePin = async (channelId, e) => {
+    if (e) e.stopPropagation();
+    try {
+      const res = await fetch('/api/youtube/channel/pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        const currentlyPinned = data.pinned;
+        if (analysisData?.channel?.id === channelId) {
+          setIsPinned(currentlyPinned);
+        }
+        
+        setPinnedIds(prev => {
+          const next = new Set(prev);
+          if (currentlyPinned) next.add(channelId);
+          else next.delete(channelId);
+          return next;
+        });
+
+        window.dispatchEvent(new CustomEvent('refresh-pins'));
+      }
+    } catch (err) {
+      console.error("Failed to toggle pin:", err);
     }
   };
 
@@ -367,12 +425,24 @@ function ChannelsContent() {
                              </div>
                           </div>
                        </div>
-                       <button 
-                        onClick={() => selectChannel(channel.id)}
-                        className="bg-white/5 hover:bg-white text-white hover:text-black p-2.5 rounded-xl transition-all"
-                       >
-                        <ArrowRight className="w-4 h-4" />
-                       </button>
+                       <div className="flex flex-col gap-2">
+                         <button 
+                          onClick={(e) => handleTogglePin(channel.id, e)}
+                          className={`p-2.5 rounded-xl transition-all ${
+                            pinnedIds.has(channel.id) 
+                              ? 'bg-geist-success text-white' 
+                              : 'bg-white/5 hover:bg-white/10 text-accents-4 hover:text-white'
+                          }`}
+                         >
+                          <Pin className="w-4 h-4" />
+                         </button>
+                         <button 
+                          onClick={() => selectChannel(channel.id)}
+                          className="bg-white/5 hover:bg-white text-white hover:text-black p-2.5 rounded-xl transition-all"
+                         >
+                          <ArrowRight className="w-4 h-4" />
+                         </button>
+                       </div>
                     </motion.div>
                  ))}
               </motion.div>
@@ -425,6 +495,15 @@ function ChannelsContent() {
                         >
                           <Users className="w-3 h-3" />
                           Rivals
+                        </button>
+                        <button 
+                          onClick={() => handleTogglePin(analysisData.channel.id)}
+                          className={`text-[9px] font-bold px-4 py-1.5 rounded-lg uppercase tracking-widest transition-all flex items-center gap-2 ${
+                            isPinned ? 'bg-geist-success text-white' : 'bg-white/5 text-white border border-white/10 hover:bg-white/10'
+                          }`}
+                        >
+                          <Pin className="w-3 h-3" />
+                          {isPinned ? 'Pinned' : 'Pin'}
                         </button>
                         <button 
                           onClick={() => setIsNotesModalOpen(true)}
