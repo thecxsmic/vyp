@@ -8,7 +8,7 @@ import {
   BarChart3, FileText, Loader2, Eye, Users, TrendingUp, 
   Calendar, Target, Zap, Activity, ExternalLink, MessageSquare, 
   ThumbsUp, Flame, Rocket, Edit3, Radio, ShieldCheck, 
-  History, Globe, Cpu, Share2, Network, ChevronRight, Check
+  History, Globe, Cpu, Share2, Network, ChevronRight, Check, Trophy
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import 'react-quill-new/dist/quill.snow.css';
@@ -117,8 +117,41 @@ export default function NotePage({ params }) {
       case 'video': return <Video className="w-5 h-5 text-blue-500" />;
       case 'channel': return <User className="w-5 h-5 text-purple-500" />;
       case 'idea': return <Lightbulb className="w-5 h-5 text-yellow-500" />;
+      case 'analysis': return <BarChart3 className="w-5 h-5 text-green-500" />;
       default: return <FileText className="w-5 h-5 text-zinc-500" />;
     }
+  };
+
+  const getAnalysisDetails = () => {
+    if (item?.type !== 'analysis') return null;
+    const m = item.metadata || {};
+    const base = m.baseChannel || {};
+    const competitors = m.competitors || [];
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-2 px-1">
+           <Trophy className="w-3.5 h-3.5 text-zinc-500" />
+           <h4 className="text-xs font-semibold text-zinc-400">Competitive Landscape</h4>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+           {competitors.map((comp, i) => (
+             <div key={i} className="bg-zinc-900/20 border border-white/5 rounded-2xl p-5 flex items-center gap-4 group hover:border-white/10 transition-all">
+                <img src={comp.thumbnail} className="w-12 h-12 rounded-full border border-white/10" alt="" />
+                <div className="flex-1 min-w-0">
+                   <h4 className="text-sm font-bold text-white truncate">{comp.title}</h4>
+                   <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{comp.matchType || 'Competitor'}</p>
+                </div>
+                <div className="text-right">
+                   <p className="text-xs font-bold text-zinc-300">{formatNumber(comp.statistics.subscriberCount)}</p>
+                   <p className="text-[9px] text-zinc-600 font-bold uppercase">Subs</p>
+                </div>
+             </div>
+           ))}
+        </div>
+      </div>
+    );
   };
 
   const getIdeaDetails = () => {
@@ -406,6 +439,7 @@ export default function NotePage({ params }) {
             <div className="pt-4">
               {item.type === 'idea' && getIdeaDetails()}
               {item.type === 'video' && getVideoDetails()}
+              {item.type === 'analysis' && getAnalysisDetails()}
             </div>
 
             {/* Editor Section */}

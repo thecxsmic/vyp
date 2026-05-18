@@ -56,6 +56,53 @@ export default function LibraryPage() {
     return n.toString();
   };
 
+  const getAnalysisDetails = (item) => {
+    if (item.type !== 'analysis') return null;
+    const m = item.metadata || {};
+    const base = m.baseChannel || {};
+    const competitors = m.competitors || [];
+    
+    return (
+      <div className="bg-black/40 border border-white/5 rounded-2xl p-5 mb-8 space-y-4">
+        <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-1">
+           <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Snapshot Stats</p>
+           <span className="text-[9px] font-black text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded">At Save Time</span>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
+           <div className="space-y-1">
+              <p className="text-[9px] font-bold text-zinc-600 uppercase">Subscribers</p>
+              <p className="text-xs font-black text-zinc-200">{formatNumber(base.statistics?.subscriberCount)}</p>
+           </div>
+           <div className="space-y-1">
+              <p className="text-[9px] font-bold text-zinc-600 uppercase">Total Views</p>
+              <p className="text-xs font-black text-zinc-200">{formatNumber(base.statistics?.viewCount)}</p>
+           </div>
+        </div>
+
+        <div className="pt-3 border-t border-white/5 flex items-center justify-between">
+           <p className="text-[9px] font-bold text-zinc-600 uppercase">Competitive Set</p>
+           <div className="flex -space-x-1.5">
+              {competitors.slice(0, 3).map((c, i) => (
+                <img 
+                  key={i} 
+                  src={c.thumbnail} 
+                  className="w-5 h-5 rounded-full ring-2 ring-zinc-900 border border-white/10" 
+                  title={c.title}
+                  alt=""
+                />
+              ))}
+              {competitors.length > 3 && (
+                <div className="w-5 h-5 rounded-full bg-zinc-800 ring-2 ring-zinc-900 flex items-center justify-center border border-white/10">
+                   <span className="text-[7px] font-black text-zinc-500">+{competitors.length - 3}</span>
+                </div>
+              )}
+           </div>
+        </div>
+      </div>
+    );
+  };
+
   const getIdeaDetails = (item) => {
     if (item.type !== 'idea') return null;
     const m = item.metadata || {};
@@ -65,7 +112,7 @@ export default function LibraryPage() {
     const timing = m.timing || m.momentum || m.topic;
 
     return (
-      <div className="bg-black/40 border border-white/5 rounded-2xl p-5 mb-6 space-y-5">
+      <div className="bg-black/40 border border-white/5 rounded-2xl p-5 mb-8 space-y-5">
         {rationale && (
           <div className="space-y-2">
             <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] flex items-center gap-2">
@@ -167,13 +214,20 @@ export default function LibraryPage() {
 
   const getThumbnail = (item) => {
     if (item.metadata?.thumbnail) return item.metadata.thumbnail;
+    if (item.type === 'analysis' && item.metadata?.baseChannel?.thumbnail) {
+      return item.metadata.baseChannel.thumbnail;
+    }
     if (item.type === 'video' && item.reference_id) {
       return `https://i.ytimg.com/vi/${item.reference_id}/mqdefault.jpg`;
     }
     return null;
   };
 
-  const getChannelLink = (item) => {
+  const getAnalyzeLink = (item) => {
+    if (item.type === 'analysis') {
+      const id = item.reference_id || item.id;
+      return `/competitors?analysisId=${id}`;
+    }
     const channelId = item.type === 'video' ? item.metadata?.channelId : (item.reference_id || item.metadata?.channelId);
     if (!channelId || channelId === 'undefined') return '#';
     return `/channels?channelId=${channelId}`;
@@ -342,7 +396,7 @@ export default function LibraryPage() {
                   <h3 className="text-xl font-bold text-zinc-100 mb-6 line-clamp-2 leading-tight tracking-tight group-hover:text-white transition-colors">{item.title}</h3>
                   
                   {/* Dynamic Content Details */}
-                  {item.type === 'idea' ? getIdeaDetails(item) : (
+                  {item.type === 'idea' ? getIdeaDetails(item) : item.type === 'analysis' ? getAnalysisDetails(item) : (
                     item.content && (
                       <div className="bg-black/40 border border-white/5 rounded-2xl p-5 mb-8 flex-1 overflow-hidden">
                          <div 
@@ -371,9 +425,9 @@ export default function LibraryPage() {
                       View Research
                     </button>
                     <div className="flex gap-2">
-                       {item.type === 'channel' && (
+                       {(item.type === 'channel' || item.type === 'analysis') && (
                          <Link 
-                            href={getChannelLink(item)}
+                            href={getAnalyzeLink(item)}
                             className="w-12 h-12 bg-zinc-900 hover:bg-white hover:text-black border border-zinc-800 rounded-2xl transition-all flex items-center justify-center group/btn"
                             title="Analyze"
                           >

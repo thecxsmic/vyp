@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useChannel } from '@/contexts/channel';
 import { useUser } from '@/contexts/user';
@@ -39,6 +40,7 @@ const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
 export default function CompetitorsPage() {
   useTitle("Competitor Matrix");
+  const searchParams = useSearchParams();
   const { channels } = useChannel();
   const { user } = useUser();
   const [loading, setLoading] = useState(false);
@@ -53,6 +55,71 @@ export default function CompetitorsPage() {
 
   const selectedChannel = channels.data.find(c => c.id === channels.selectedId);
   const getCacheKey = () => `${CACHE_KEY_PREFIX}${selectedChannel?.id || 'default'}`;
+
+  const loadAnalysisById = useCallback(async (id) => {
+    setLoading(true);
+    setProgress(10);
+    setCurrentStep('Loading saved analysis...');
+    setError(null);
+    try {
+      const res = await fetch(`/api/competitors/save?id=${id}`);
+      const result = await res.json();
+      
+      if (!result.success || !result.item) {
+        throw new Error(`Analysis snapshot "${id}" not found. This might be an older research note that hasn't been synced to the new database format.`);
+      }
+      
+      const analysis = result.item;
+      setProgress(40);
+      setCurrentStep('Fetching latest channel data...');
+      
+      // Fetch fresh data for the subject
+      const subjectRes = await fetch(`/api/youtube/channel?channelId=${analysis.subject_id}`);
+      const subjectData = await subjectRes.json();
+      
+      if (!subjectData.success || !subjectData.channel) {
+        throw new Error("Could not fetch fresh data for the subject channel.");
+      }
+      
+      setProgress(70);
+      setCurrentStep('Analyzing rival performance...');
+      
+      const baseSubs = parseInt(subjectData.channel.statistics.subscriberCount);
+      
+      const competitors = await Promise.all(analysis.competitor_ids.map(async (cId) => {
+        try {
+          const cRes = await fetch(`/api/youtube/channel?channelId=${cId}`);
+          const cData = await cRes.json();
+          if (cData.success && cData.channel) {
+            const compSubs = parseInt(cData.channel.statistics.subscriberCount);
+            let matchType = "Emerging Rival";
+            if (compSubs > baseSubs * 10) matchType = "Market Leader";
+            else if (compSubs > baseSubs * 2) matchType = "Growth Target";
+            else if (compSubs >= baseSubs * 0.5) matchType = "Direct Peer";
+            
+            return { ...cData.channel, videos: cData.videos || [], matchType };
+          }
+        } catch (e) {
+          console.error(`Failed to fetch competitor ${cId}:`, e);
+        }
+        return null;
+      }));
+
+      const validCompetitors = competitors.filter(c => c !== null);
+      
+      setData({
+        baseChannel: { ...subjectData.channel, videos: subjectData.videos || [] },
+        competitors: validCompetitors.sort((a, b) => parseInt(b.statistics.subscriberCount) - parseInt(a.statistics.subscriberCount)),
+        timestamp: analysis.created_at
+      });
+      setProgress(100);
+    } catch (err) {
+      console.error("Load Analysis Error:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const loadCachedData = useCallback(() => {
     if (!selectedChannel) return null;
@@ -74,13 +141,16 @@ export default function CompetitorsPage() {
   }, [selectedChannel]);
 
   useEffect(() => {
-    if (selectedChannel) {
+    const analysisId = searchParams.get('analysisId');
+    if (analysisId) {
+      loadAnalysisById(analysisId);
+    } else if (selectedChannel) {
       const cached = loadCachedData();
       if (!cached && !loading && !data) {
         analyzeCompetitors();
       }
     }
-  }, [selectedChannel?.id]);
+  }, [selectedChannel?.id, searchParams]);
 
   const cacheData = (analysisData) => {
     if (!selectedChannel) return;
@@ -175,7 +245,18 @@ export default function CompetitorsPage() {
   const handleSaveNote = (type, title, metadata) => {
     const b64 = typeof window !== 'undefined' ? btoa(encodeURIComponent(title).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1))) : btoa(title);
     const reference_id = `${type.substring(0,2)}-${b64.substring(0, 10)}`;
-    setSelectedNoteItem({ type, title, reference_id, metadata });
+    
+    // Strip heavy video data if it's an analysis to keep library metadata lean
+    let cleanMetadata = metadata;
+    if (type === 'analysis' && metadata.baseChannel) {
+      cleanMetadata = {
+        ...metadata,
+        baseChannel: { ...metadata.baseChannel, videos: undefined },
+        competitors: metadata.competitors.map(c => ({ ...c, videos: undefined }))
+      };
+    }
+    
+    setSelectedNoteItem({ type, title, reference_id, metadata: cleanMetadata });
     setIsNotesModalOpen(true);
   };
 

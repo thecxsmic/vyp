@@ -451,6 +451,34 @@ export async function getSavedAnalyses(userId) {
 }
 
 /**
+ * Get a specific saved analysis by id
+ */
+export async function getAnalysisById(userId, analysisId) {
+  if (!process.env.TURSO_DATABASE_URL || !analysisId) return null;
+
+  try {
+    const rs = await client.execute({
+      sql: `SELECT a.*, c.title as subject_title, c.thumbnail as subject_thumbnail 
+            FROM saved_analyses a 
+            LEFT JOIN channels c ON a.subject_id = c.id 
+            WHERE a.user_id = ? AND a.id = ?`,
+      args: [userId, analysisId],
+    });
+
+    if (rs.rows.length === 0) return null;
+
+    const row = rs.rows[0];
+    return {
+      ...row,
+      competitor_ids: JSON.parse(row.competitor_ids)
+    };
+  } catch (error) {
+    console.error("[Turso] Get Analysis By Id Error:", error);
+    return null;
+  }
+}
+
+/**
  * Delete a saved analysis
  */
 export async function deleteAnalysis(userId, analysisId) {

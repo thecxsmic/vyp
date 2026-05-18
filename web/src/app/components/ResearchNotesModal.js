@@ -160,24 +160,54 @@ export default function ResearchNotesModal({ isOpen, onClose, item, onSave, onVi
   }), []);
 
   const handleSave = async () => {
-    if (!content || content === '<p><br></p>') return;
+    // Allow saving without content if it's a structured item (analysis, video, channel, idea)
+    const isPlainNote = item?.type === 'note' || !item?.type;
+    const hasContent = content && content !== '<p><br></p>';
+    
+    if (isPlainNote && !hasContent) return;
+    
     setSaving(true);
     try {
+      let structuredId = item?.reference_id || null;
+
+      // 1. If it's a new analysis, save to Structured Analyses table first
+      if (item?.type === 'analysis' && item.metadata?.baseChannel && (!dbId || !item.reference_id || item.reference_id.startsWith('an-'))) {
+        try {
+          const sRes = await fetch('/api/competitors/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              subjectId: item.metadata.baseChannel.id,
+              competitorIds: item.metadata.competitors.map(c => c.id),
+              title: item?.title || `Analysis: ${item.metadata.baseChannel.title}`
+            })
+          });
+          const sData = await sRes.json();
+          if (sData.success) {
+            structuredId = sData.id;
+          }
+        } catch (sErr) {
+          console.error('Failed to save structured analysis:', sErr);
+        }
+      }
+
+      // 2. Save to Research Library
       const res = await fetch('/api/library', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: dbId,
           type: item?.type || 'note',
-          reference_id: item?.reference_id || item?.id || item?.channelId || null,
+          reference_id: structuredId || item?.id || item?.channelId || null,
           title: item?.title || 'Quick Note',
-          content: content,
+          content: content || "",
           metadata: item?.metadata || {}
         })
       });
       const data = await res.json();
+
       if (data.success) {
-        if (onSave) onSave(data.id || dbId);
+        if (onSave) onSave(structuredId || data.id || dbId);
         onClose();
       }
     } catch (err) {
@@ -195,6 +225,42 @@ export default function ResearchNotesModal({ isOpen, onClose, item, onSave, onVi
       case 'analysis': return <BarChart3 className="w-5 h-5 text-green-500" />;
       default: return <FileText className="w-5 h-5 text-zinc-500" />;
     }
+  };
+
+  const getAnalysisPreview = () => {
+    if (item?.type !== 'analysis') return null;
+    const m = item.metadata || {};
+    const base = m.baseChannel || {};
+    const competitors = m.competitors || [];
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+            {base.title || 'Market Snapshot'}
+          </p>
+          <span className="text-[10px] font-bold text-blue-500 uppercase px-2 py-0.5 bg-blue-500/10 rounded">
+            {competitors.length} Rivals
+          </span>
+        </div>
+        <div className="flex -space-x-2 overflow-hidden">
+          {[base, ...competitors.slice(0, 4)].map((ch, i) => (
+            <img 
+              key={i}
+              src={ch.thumbnail} 
+              className="inline-block h-8 w-8 rounded-full ring-2 ring-zinc-900 grayscale-[0.5] hover:grayscale-0 transition-all" 
+              title={ch.title}
+              alt=""
+            />
+          ))}
+          {competitors.length > 4 && (
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 ring-2 ring-zinc-900">
+              <span className="text-[8px] font-bold text-zinc-500">+{competitors.length - 4}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
   };
 
   const modalContent = (
@@ -320,6 +386,8 @@ export default function ResearchNotesModal({ isOpen, onClose, item, onSave, onVi
 
                       {item.type === 'idea' ? (
                         getIdeaPreview()
+                      ) : item.type === 'analysis' ? (
+                        getAnalysisPreview()
                       ) : (
                         <>
                           <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-3">
