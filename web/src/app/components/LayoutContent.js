@@ -1,130 +1,181 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { UserButton } from "@clerk/nextjs";
-import { Plus } from 'lucide-react';
+import { Plus, Menu, X, Search, Zap, Users, Trophy, BookOpen, BarChart3, Activity } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import PinnedChannels from "./PinnedChannels";
 import ResearchNotesModal from "./ResearchNotesModal";
 
+const navItems = [
+  { name: 'Search', href: '/', icon: Search },
+  { name: 'Trends', href: '/radar', icon: Zap },
+  { name: 'Channels', href: '/channels', icon: Users },
+  { name: 'Competitors', href: '/competitors', icon: Trophy },
+  { name: 'Library', href: '/library', icon: BookOpen },
+];
+
+const secondaryNavItems = [
+  { name: 'Analytics', href: '#', icon: BarChart3 },
+  { name: 'Predictions', href: '#', icon: Activity },
+];
+
 export default function LayoutContent({ children }) {
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
+  const SidebarContent = () => (
+    <>
+      <div className="p-6">
+        <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-80 group">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-geist-success via-[#00dfd8] to-geist-success animate-logo-gradient shadow-[0_0_15px_rgba(0,112,243,0.3)] group-hover:shadow-[0_0_20px_rgba(0,112,243,0.5)] transition-shadow" />
+          <span className="font-bold text-xl tracking-tight text-white">Vyron</span>
+        </Link>
+      </div>
+
+      <nav className="flex-1 px-3 space-y-0.5 mt-2 overflow-y-auto no-scrollbar">
+        {navItems.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link 
+              key={item.name}
+              href={item.href} 
+              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                isActive 
+                  ? 'text-white bg-white/10' 
+                  : 'text-accents-5 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <item.icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-accents-4'}`} strokeWidth={2} />
+              {item.name}
+            </Link>
+          );
+        })}
+
+        <div className="pt-8 pb-2 px-3">
+          <p className="text-[10px] font-bold text-accents-4 uppercase tracking-wider">Research</p>
+        </div>
+        
+        <button 
+          onClick={() => setIsNotesModalOpen(true)}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-geist-success hover:bg-geist-success/5 transition-all group text-left"
+        >
+          <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" strokeWidth={2.5} />
+          New Note
+        </button>
+      </nav>
+
+      <div className="p-4 border-t border-white/5 mt-auto">
+        <div className="flex items-center gap-3 px-2">
+            <UserButton appearance={{ 
+              elements: { 
+                userButtonAvatarBox: "w-8 h-8 border border-white/10" 
+              } 
+            }} />
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-white truncate">Pro Account</p>
+              <p className="text-[10px] text-accents-4 font-medium uppercase tracking-tighter">Status: Active</p>
+            </div>
+        </div>
+      </div>
+    </>
+  );
 
   return (
-    <div className="flex h-full overflow-hidden">
-      {/* Research Notes Modal - Global */}
+    <div className="flex h-full overflow-hidden bg-black text-white font-sans selection:bg-geist-success selection:text-white">
       <ResearchNotesModal 
         isOpen={isNotesModalOpen} 
         onClose={() => setIsNotesModalOpen(false)} 
       />
 
-      {/* Sidebar */}
-      <aside className="w-64 border-r border-white/5 bg-[#050505] flex flex-col shrink-0 hidden md:flex">
-        <div className="p-8">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-              <div className="w-0 h-0 border-t-[5px] border-t-transparent border-l-[8px] border-l-black border-b-[5px] border-b-transparent ml-0.5"></div>
-            </div>
-            <span className="font-black text-xl tracking-tighter text-white uppercase italic">Vyron</span>
-          </Link>
-        </div>
-
-        <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto no-scrollbar">
-          <p className="text-[10px] font-black text-[#333] uppercase tracking-[0.2em] px-4 mb-4">Core Intelligence</p>
-          <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#888] hover:text-white hover:bg-white/5 transition-all">
-            <svg className="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-            Intelligence
-          </Link>
-          <Link href="/radar" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#888] hover:text-white hover:bg-white/5 transition-all">
-            <svg className="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-            Trend Radar
-          </Link>
-          <Link href="/channels" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#888] hover:text-white hover:bg-white/5 transition-all">
-            <svg className="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-            Ecosystem
-          </Link>
-          <Link href="/competitors" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#888] hover:text-white hover:bg-white/5 transition-all">
-            <svg className="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
-            Competitors
-          </Link>
-          <Link href="/library" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#888] hover:text-white hover:bg-white/5 transition-all">
-            <svg className="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
-            Research Hub
-          </Link>
-
-          <p className="text-[10px] font-black text-[#333] uppercase tracking-[0.2em] px-4 mb-4 mt-10">Research</p>
-          <button 
-            onClick={() => setIsNotesModalOpen(true)}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#0070f3] bg-[#0070f3]/5 border border-[#0070f3]/10 hover:bg-[#0070f3]/10 transition-all group text-left"
-          >
-            <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" />
-            Quick Note
-          </button>
-          
-          <p className="text-[10px] font-black text-[#333] uppercase tracking-[0.2em] px-4 mb-4 mt-10">Advanced</p>
-          <Link href="#" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#444] hover:text-[#888] transition-all">
-              <svg className="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-              Analytics
-          </Link>
-          <Link href="#" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#444] hover:text-[#888] transition-all">
-              <svg className="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-              Predictive
-          </Link>
-
-          <p className="text-[10px] font-black text-[#333] uppercase tracking-[0.2em] px-4 mb-4 mt-10">Pinned Channels</p>
-          <PinnedChannels />
-        </nav>
-
-        <div className="p-4 mt-auto">
-            <div className="bg-white/5 border border-white/5 rounded-2xl p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                  <UserButton appearance={{ 
-                    elements: { 
-                      userButtonAvatarBox: "w-8 h-8 border border-white/10 hover:border-[#0070f3] transition-colors" 
-                    } 
-                  }} />
-                  <div className="overflow-hidden">
-                    <p className="text-[10px] font-black text-white uppercase truncate">Session Active</p>
-                    <p className="text-[8px] font-bold text-[#444] uppercase tracking-widest">Administrator</p>
-                  </div>
-              </div>
-            </div>
-        </div>
+      {/* Desktop Sidebar */}
+      <aside className="w-64 border-r border-white/5 bg-black flex flex-col shrink-0 hidden md:flex">
+        <SidebarContent />
       </aside>
 
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] md:hidden"
+            />
+            <motion.aside 
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 left-0 w-72 bg-black border-r border-white/10 z-[101] flex flex-col md:hidden shadow-2xl"
+            >
+              <SidebarContent />
+              <button 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="absolute top-6 right-4 p-2 text-accents-4 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden bg-black">
-        <header className="h-16 border-b border-white/5 flex items-center justify-between px-8 bg-black/50 backdrop-blur-xl shrink-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <header className="h-14 border-b border-white/5 flex items-center justify-between px-4 md:px-8 bg-black/80 backdrop-blur-md shrink-0 sticky top-0 z-50">
           <div className="flex items-center gap-4">
-              <div className="w-2 h-2 rounded-full bg-[#00dfd8] animate-pulse"></div>
-              <span className="text-[10px] font-black text-[#444] uppercase tracking-[0.2em]">Neural Engine v4.2 // Active</span>
+              <button 
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="p-2 -ml-2 text-accents-4 hover:text-white md:hidden transition-colors"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-geist-success shadow-[0_0_8px_rgba(0,112,243,0.5)]"></div>
+                <span className="text-xs font-medium text-accents-5">System Online</span>
+              </div>
           </div>
-          <div className="flex items-center gap-6">
-              <div className="h-4 w-px bg-white/10"></div>
-              <button className="text-[10px] font-black text-[#888] hover:text-white uppercase tracking-widest transition-colors">Documentation</button>
-              <div className="flex items-center gap-2 bg-white/5 px-3 py-1 rounded-full border border-white/5">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#0070f3]"></div>
-                <span className="text-[9px] font-black text-white uppercase tracking-widest">Neural Pro Active</span>
+          <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 bg-white/5 px-2.5 py-1 rounded-full border border-white/10">
+                <Zap className="w-3 h-3 text-geist-success" fill="currentColor" />
+                <span className="text-[10px] font-bold text-white uppercase tracking-tight">Pro</span>
               </div>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto scroll-smooth">
-          {children}
-          <footer className="border-t border-white/5 py-12 px-8 mt-20">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-              <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 bg-white/10 rounded-full flex items-center justify-center">
-                    <div className="w-0 h-0 border-t-[3px] border-t-transparent border-l-[5px] border-l-white/50 border-b-[3px] border-b-transparent ml-0.5"></div>
-                  </div>
-                  <span className="text-[9px] font-black text-[#222] uppercase tracking-[0.3em]">Built for the future of content ecosystems</span>
-              </div>
-              <div className="flex gap-8 text-[9px] font-black text-[#333] uppercase tracking-widest">
-                  <a href="#" className="hover:text-white transition-colors">Privacy</a>
-                  <a href="#" className="hover:text-white transition-colors">Terms</a>
-                  <a href="#" className="hover:text-white transition-colors">GitHub</a>
-              </div>
+
+        <main className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar relative">
+          <div className="max-w-[1600px] mx-auto min-h-full flex flex-col">
+            <div className="flex-1">
+              {children}
             </div>
-          </footer>
+            
+            <footer className="border-t border-white/5 py-10 px-8 mt-auto">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+                <div className="flex items-center gap-2.5">
+                    <div className="w-4 h-4 bg-white/10 rounded-full flex items-center justify-center">
+                      <div className="w-0 h-0 border-t-[2.5px] border-t-transparent border-l-[4px] border-l-white/40 border-b-[2.5px] border-b-transparent ml-0.5"></div>
+                    </div>
+                    <span className="text-[10px] font-medium text-accents-4 tracking-tight">© 2026 Vyron Intelligence. All rights reserved.</span>
+                </div>
+                <div className="flex gap-6 text-[11px] font-medium text-accents-4">
+                    <a href="#" className="hover:text-white transition-colors">Privacy</a>
+                    <a href="#" className="hover:text-white transition-colors">Terms</a>
+                    <a href="#" className="hover:text-white transition-colors">GitHub</a>
+                </div>
+              </div>
+            </footer>
+          </div>
         </main>
       </div>
     </div>
