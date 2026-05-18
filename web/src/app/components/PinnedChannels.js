@@ -38,25 +38,25 @@ export default function PinnedChannels() {
 
   if (pinned.length === 0) return (
     <div className="px-6 py-4">
-      <p className="text-[10px] font-bold text-[#333] uppercase tracking-widest leading-relaxed">
-        No pinned channels. Pin a creator to see them here.
+      <p className="text-[9px] font-bold text-accents-3 uppercase tracking-widest leading-relaxed">
+        Sync creators to enable tracking.
       </p>
     </div>
   );
 
   return (
-    <div className="px-2 space-y-1">
+    <div className="px-2 space-y-0.5">
       {pinned.map((channel) => (
         <div key={channel.id} className="group relative flex items-center">
            <Link 
             href={`/channels?channelId=${channel.id}`} 
-            className="flex-1 flex items-center gap-3 px-4 py-2 rounded-xl text-[11px] font-bold text-[#888] hover:text-white hover:bg-white/5 transition-all truncate"
+            className="flex-1 flex items-center gap-3 px-3 py-1.5 rounded-md text-[10px] font-bold text-accents-4 hover:text-white hover:bg-white/[0.04] transition-all uppercase tracking-tight truncate"
           >
-            <img src={channel.thumbnail} className="w-5 h-5 rounded-full grayscale group-hover:grayscale-0 transition-all" alt="" />
+            <img src={channel.thumbnail} className="w-4 h-4 rounded-full grayscale group-hover:grayscale-0 transition-all border border-white/10" alt="" />
             <span className="truncate">{channel.title}</span>
           </Link>
-          <div className="absolute right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#0070f3]"></div>
+          <div className="absolute right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="w-1 h-1 rounded-full bg-geist-success shadow-[0_0_8px_rgba(0,112,243,0.5)]"></div>
           </div>
         </div>
       ))}

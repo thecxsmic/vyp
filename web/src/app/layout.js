@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import Link from "next/link";
 import { ClerkProvider, Show, UserButton, SignIn } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
@@ -12,13 +12,13 @@ import PinnedChannels from "./components/PinnedChannels";
 import LayoutContent from "./components/LayoutContent";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
 });
 
@@ -35,9 +35,9 @@ export default async function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+      className={`${inter.variable} ${spaceGrotesk.variable} h-full antialiased dark`}
     >
-      <body className="h-full bg-black text-[#ededed] selection:bg-[#0070f3] selection:text-white">
+      <body className="h-full bg-black text-[#ededed] selection:bg-[#0070f3] selection:text-white font-sans">
         <ClerkProvider>
           <UserProvider>
             <ChannelProvider>
@@ -62,7 +62,7 @@ export default async function RootLayout({ children }) {
                               </div>
                             )}
                             
-                            <h1 className="text-5xl font-bold tracking-tight text-white leading-[1.1]">
+                            <h1 className="font-display text-5xl font-black tracking-tight text-white leading-[1.1] uppercase">
                               {subscription?.isHalted ? "Update Billing." : subscription?.isExpired ? "Plan Expired." : "Upgrade to Pro."}
                             </h1>
                             <p className="text-accents-5 text-lg font-medium leading-relaxed">
@@ -91,7 +91,7 @@ export default async function RootLayout({ children }) {
                                <UserButton />
                             </div>
                             <p className="text-[10px] font-bold text-accents-4 uppercase tracking-wider mb-4">Selected Plan</p>
-                            <h2 className="text-3xl font-bold text-white mb-2">Pro Plan</h2>
+                            <h2 className="font-display text-3xl font-black text-white mb-2 uppercase">Pro Plan</h2>
                             <div className="flex items-baseline gap-2 mb-8">
                                <span className="text-5xl font-bold text-white tracking-tight">999</span>
                                <span className="text-sm font-medium text-accents-4 uppercase tracking-wider">/ Month</span>
@@ -120,7 +120,7 @@ export default async function RootLayout({ children }) {
                     <div className="w-full max-w-md">
                       <div className="mb-10 text-center">
                         <div className="w-16 h-16 bg-gradient-to-tr from-geist-success via-[#00dfd8] to-geist-success animate-logo-gradient rounded-2xl mx-auto mb-6 shadow-2xl" />
-                        <h1 className="text-3xl font-bold tracking-tight text-white">Vyron</h1>
+                        <h1 className="font-display text-3xl font-black tracking-tight text-white uppercase">Vyron</h1>
                         <p className="text-xs font-medium text-accents-4 uppercase tracking-[0.2em] mt-3">Sign in to continue</p>
                       </div>
                       <SignIn 

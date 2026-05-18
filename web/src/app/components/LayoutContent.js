@@ -17,11 +17,6 @@ const navItems = [
   { name: 'Library', href: '/library', icon: BookOpen },
 ];
 
-const secondaryNavItems = [
-  { name: 'Analytics', href: '#', icon: BarChart3 },
-  { name: 'Predictions', href: '#', icon: Activity },
-];
-
 export default function LayoutContent({ children }) {
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -37,24 +32,33 @@ export default function LayoutContent({ children }) {
       <div className="p-6">
         <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-80 group">
           <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-geist-success via-[#00dfd8] to-geist-success animate-logo-gradient shadow-[0_0_15px_rgba(0,112,243,0.3)] group-hover:shadow-[0_0_20px_rgba(0,112,243,0.5)] transition-shadow" />
-          <span className="font-bold text-xl tracking-tight text-white">Vyron</span>
+          <span className="font-display font-black text-xl tracking-tight text-white uppercase">Vyron</span>
         </Link>
       </div>
 
       <nav className="flex-1 px-3 space-y-0.5 mt-2 overflow-y-auto no-scrollbar">
+        <div className="pb-2 px-3">
+          <p className="text-[10px] font-bold text-accents-4 uppercase tracking-widest">Intelligence</p>
+        </div>
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link 
               key={item.name}
               href={item.href} 
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center gap-3 px-3 py-2 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all relative group ${
                 isActive 
-                  ? 'text-white bg-white/10' 
-                  : 'text-accents-5 hover:text-white hover:bg-white/5'
+                  ? 'text-white bg-white/[0.08]' 
+                  : 'text-accents-4 hover:text-white hover:bg-white/[0.04]'
               }`}
             >
-              <item.icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-accents-4'}`} strokeWidth={2} />
+              {isActive && (
+                <motion.div 
+                  layoutId="active-nav-indicator"
+                  className="absolute left-0 w-[2px] h-4 bg-white rounded-full"
+                />
+              )}
+              <item.icon className={`w-4 h-4 transition-colors ${isActive ? 'text-white' : 'text-accents-4 group-hover:text-white'}`} strokeWidth={isActive ? 2.5 : 2} />
               {item.name}
             </Link>
           );
@@ -66,23 +70,28 @@ export default function LayoutContent({ children }) {
         
         <button 
           onClick={() => setIsNotesModalOpen(true)}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-geist-success hover:bg-geist-success/5 transition-all group text-left"
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider text-geist-success hover:bg-geist-success/5 transition-all group text-left"
         >
-          <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" strokeWidth={2.5} />
+          <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" strokeWidth={3} />
           New Note
         </button>
+
+        <div className="pt-8 pb-4 px-3">
+          <p className="text-[10px] font-bold text-accents-4 uppercase tracking-wider">Pinned</p>
+        </div>
+        <PinnedChannels />
       </nav>
 
-      <div className="p-4 border-t border-white/5 mt-auto">
-        <div className="flex items-center gap-3 px-2">
+      <div className="p-4 border-t border-accents-2 mt-auto">
+        <div className="bg-accents-1 border border-accents-2 rounded-lg p-3 flex items-center gap-3 hover:bg-white/[0.02] transition-colors cursor-pointer">
             <UserButton appearance={{ 
               elements: { 
                 userButtonAvatarBox: "w-8 h-8 border border-white/10" 
               } 
             }} />
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-white truncate">Pro Account</p>
-              <p className="text-[10px] text-accents-4 font-medium uppercase tracking-tighter">Status: Active</p>
+              <p className="text-[10px] font-bold text-white uppercase tracking-tight truncate">Pro Account</p>
+              <p className="text-[8px] text-accents-4 font-bold uppercase tracking-widest">Status: Active</p>
             </div>
         </div>
       </div>
@@ -97,7 +106,7 @@ export default function LayoutContent({ children }) {
       />
 
       {/* Desktop Sidebar */}
-      <aside className="w-64 border-r border-white/5 bg-black flex flex-col shrink-0 hidden md:flex">
+      <aside className="w-64 border-r border-accents-2 bg-accents-1 flex flex-col shrink-0 hidden md:flex">
         <SidebarContent />
       </aside>
 
@@ -117,7 +126,7 @@ export default function LayoutContent({ children }) {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 left-0 w-72 bg-black border-r border-white/10 z-[101] flex flex-col md:hidden shadow-2xl"
+              className="fixed inset-y-0 left-0 w-72 bg-accents-1 border-r border-accents-2 z-[101] flex flex-col md:hidden shadow-2xl"
             >
               <SidebarContent />
               <button 
@@ -132,8 +141,8 @@ export default function LayoutContent({ children }) {
       </AnimatePresence>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-14 border-b border-white/5 flex items-center justify-between px-4 md:px-8 bg-black/80 backdrop-blur-md shrink-0 sticky top-0 z-50">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-black">
+        <header className="h-14 border-b border-accents-2 flex items-center justify-between px-4 md:px-8 bg-black/80 backdrop-blur-md shrink-0 sticky top-0 z-50">
           <div className="flex items-center gap-4">
               <button 
                 onClick={() => setIsMobileMenuOpen(true)}
@@ -154,13 +163,13 @@ export default function LayoutContent({ children }) {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar relative">
+        <main className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar relative bg-black">
           <div className="max-w-[1600px] mx-auto min-h-full flex flex-col">
             <div className="flex-1">
               {children}
             </div>
             
-            <footer className="border-t border-white/5 py-10 px-8 mt-auto">
+            <footer className="border-t border-accents-2 py-10 px-8 mt-auto">
               <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                 <div className="flex items-center gap-2.5">
                     <div className="w-4 h-4 bg-white/10 rounded-full flex items-center justify-center">

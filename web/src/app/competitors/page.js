@@ -296,7 +296,7 @@ export default function CompetitorsPage() {
             <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
               <Shield className="w-5 h-5 text-black" />
             </div>
-            <h1 className="text-lg font-medium tracking-tight">Competitors</h1>
+            <h1 className="font-display text-lg font-black tracking-tight uppercase">Competitors</h1>
           </div>
           
           <div className="flex items-center gap-4">
