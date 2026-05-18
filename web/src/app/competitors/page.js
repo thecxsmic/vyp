@@ -301,7 +301,7 @@ export default function CompetitorsPage() {
           
           <div className="flex items-center gap-4">
             {lastScanTime && !loading && (
-              <span className="text-xs text-zinc-500 hidden sm:inline flex items-center gap-1.5">
+              <span className="text-xs text-zinc-500 hidden sm:inline-flex items-center gap-1.5 whitespace-nowrap">
                 <History className="w-3 h-3" />
                 {new Date(lastScanTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>

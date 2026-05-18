@@ -179,7 +179,8 @@ export default function TrendRadar() {
           
           <div className="flex items-center gap-4">
             {lastScanTime && !loading && (
-              <span className="text-xs text-zinc-500 hidden sm:inline">
+              <span className="text-xs text-zinc-500 hidden sm:inline flex items-center gap-1.5">
+                <BarChart3 className="w-3 h-3" />
                 Last scan: {getCacheAge()}
               </span>
             )}
