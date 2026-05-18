@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Save, FileText, Video, User, Lightbulb, BarChart3, Loader2 } from 'lucide-react';
+import { X, Save, FileText, Video, User, Lightbulb, BarChart3, Loader2, Eye, Users, TrendingUp, Calendar, Target, Zap, Activity } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { createPortal } from 'react-dom';
 import 'react-quill-new/dist/quill.snow.css';
@@ -10,14 +10,98 @@ import 'react-quill-new/dist/quill.snow.css';
 // Dynamically import ReactQuill to avoid SSR issues
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
-export default function ResearchNotesModal({ isOpen, onClose, item, onSave }) {
+export default function ResearchNotesModal({ isOpen, onClose, item, onSave, onViewDetails }) {
   const [content, setContent] = useState('');
+  const [dbId, setDbId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  const formatNumber = (num) => {
+    if (isNaN(num) || num === null || num === undefined) return "0";
+    const n = parseInt(num);
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+    if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+    return n.toString();
+  };
+
+  const getIdeaPreview = () => {
+    if (item?.type !== 'idea') return null;
+    const m = item.metadata || {};
+    const rationale = m.why || m.opportunity || m.rationale || m.predictedViews;
+    const effort = m.effort || m.difficulty || (m.viralScore ? `${m.viralScore} Viral Score` : null);
+    const timing = m.timing || m.momentum || m.topic;
+
+    return (
+      <div className="space-y-4 mt-2">
+        {rationale && (
+          <div className="space-y-1">
+            <p className="text-[8px] font-black text-zinc-600 uppercase tracking-widest flex items-center gap-1.5">
+               <Target className="w-2.5 h-2.5" />
+               Strategy / Opportunity
+            </p>
+            <p className="text-[11px] text-zinc-400 leading-relaxed line-clamp-2 italic">{rationale}</p>
+          </div>
+        )}
+        
+        <div className="flex gap-4">
+           {effort && (
+             <div className="space-y-1">
+               <p className="text-[8px] font-black text-zinc-600 uppercase tracking-widest flex items-center gap-1.5">
+                  <Zap className="w-2.5 h-2.5 text-yellow-500" />
+                  Effort
+               </p>
+               <p className="text-[10px] font-bold text-zinc-300 uppercase">{effort}</p>
+             </div>
+           )}
+           {timing && (
+             <div className="space-y-1">
+               <p className="text-[8px] font-black text-zinc-600 uppercase tracking-widest flex items-center gap-1.5">
+                  <Activity className="w-2.5 h-2.5 text-blue-500" />
+                  Momentum
+               </p>
+               <p className="text-[10px] font-bold text-zinc-300 uppercase">{timing}</p>
+             </div>
+           )}
+        </div>
+      </div>
+    );
+  };
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (isOpen && item) {
+      // Clear before loading new
+      const initialContent = item.content || '';
+      const initialDbId = item.dbId || null;
+      
+      setContent(initialContent);
+      setDbId(initialDbId);
+
+      // If we have a reference but no content/id yet, try to fetch it
+      if (!initialContent && !initialDbId && (item.id || item.reference_id)) {
+        const refId = item.id || item.reference_id;
+        fetch(`/api/library?reference_id=${refId}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.success && data.item) {
+              // Only update if we haven't typed anything yet or if it was empty
+              setContent(prev => prev === '' ? (data.item.content || '') : prev);
+              setDbId(data.item.id);
+            }
+          })
+          .catch(err => {
+            console.error('Failed to fetch existing note:', err);
+          });
+      }
+    } else if (!isOpen) {
+      // Clean up when closed to avoid stale data on next open
+      setContent('');
+      setDbId(null);
+    }
+  }, [isOpen, item]);
 
   // Quill modules configuration
   const modules = useMemo(() => ({
@@ -36,8 +120,9 @@ export default function ResearchNotesModal({ isOpen, onClose, item, onSave }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          id: dbId,
           type: item?.type || 'note',
-          reference_id: item?.id || item?.channelId || null,
+          reference_id: item?.reference_id || item?.id || item?.channelId || null,
           title: item?.title || 'Quick Note',
           content: content,
           metadata: item?.metadata || {}
@@ -47,7 +132,6 @@ export default function ResearchNotesModal({ isOpen, onClose, item, onSave }) {
       if (data.success) {
         if (onSave) onSave(data.id);
         onClose();
-        setContent(''); // Reset content on successful save
       }
     } catch (err) {
       console.error('Failed to save research note:', err);
@@ -82,19 +166,19 @@ export default function ResearchNotesModal({ isOpen, onClose, item, onSave }) {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden"
+            className="relative w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-zinc-800">
+            <div className="flex items-center justify-between p-6 border-b border-zinc-800 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-zinc-800 rounded-xl">
                   {getIcon()}
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">
-                    {item ? 'Save to Research Hub' : 'Create Quick Note'}
+                  <h3 className="text-lg font-bold text-white uppercase tracking-tighter italic">
+                    {dbId ? 'Edit Research Note' : 'Save to Research Hub'}
                   </h3>
-                  {item?.title && <p className="text-xs text-zinc-500 truncate max-w-[300px]">{item.title}</p>}
+                  {item?.title && <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest truncate max-w-[400px]">{item.title}</p>}
                 </div>
               </div>
               <button onClick={onClose} className="p-2 hover:bg-zinc-800 rounded-full transition-colors">
@@ -102,38 +186,99 @@ export default function ResearchNotesModal({ isOpen, onClose, item, onSave }) {
               </button>
             </div>
 
-            {/* Content */}
-            <div className="p-6 space-y-4">
+            {/* Scrollable Content */}
+            <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
+              {/* Reference Preview */}
+              {item && (
+                <div className="bg-black/40 border border-zinc-800 rounded-2xl overflow-hidden flex flex-col md:flex-row min-h-[8rem]">
+                  {(item.thumbnail || item.metadata?.thumbnail || (item.type === 'video' && item.reference_id)) && (
+                    <div className="w-full md:w-48 h-32 md:h-auto shrink-0 bg-zinc-800 relative">
+                       <img 
+                        src={item.thumbnail || item.metadata?.thumbnail || (item.type === 'video' ? `https://i.ytimg.com/vi/${item.reference_id}/mqdefault.jpg` : null)} 
+                        className="w-full h-full object-cover" 
+                        alt="" 
+                       />
+                       <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest text-white border border-white/10">
+                          {item.type}
+                       </div>
+                       {item.type === 'video' && onViewDetails && (
+                          <button 
+                            onClick={() => onViewDetails(item)}
+                            className="absolute bottom-2 right-2 bg-white/10 hover:bg-white/20 backdrop-blur-md p-1.5 rounded-lg border border-white/5 transition-all group"
+                            title="View Full Analytics"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-white" />
+                          </button>
+                       )}
+                    </div>
+                  )}
+                  <div className="p-4 flex-1 flex flex-col justify-center min-w-0">
+                     <div className="flex items-center gap-2 mb-1">
+                        {!item.thumbnail && !item.metadata?.thumbnail && item.type !== 'video' && (
+                          <div className="p-1.5 bg-zinc-800 rounded-lg">
+                            {getIcon()}
+                          </div>
+                        )}
+                        <h4 className="text-sm font-bold text-white line-clamp-2">{item.title}</h4>
+                     </div>
+                     
+                     {item.type === 'idea' ? (
+                        getIdeaPreview()
+                     ) : (
+                       <>
+                         <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-3">
+                            {item.metadata?.channelTitle || item.metadata?.customUrl || 'Linked Reference'}
+                         </p>
+                         
+                         <div className="flex flex-wrap gap-4">
+                            {item.metadata?.statistics?.viewCount && (
+                              <div className="flex items-center gap-1.5">
+                                 <Eye className="w-3 h-3 text-zinc-600" />
+                                 <span className="text-[10px] font-black text-zinc-400">{formatNumber(item.metadata.statistics.viewCount)}</span>
+                              </div>
+                            )}
+                            {item.metadata?.statistics?.subscriberCount && (
+                              <div className="flex items-center gap-1.5">
+                                 <Users className="w-3 h-3 text-zinc-600" />
+                                 <span className="text-[10px] font-black text-zinc-400">{formatNumber(item.metadata.statistics.subscriberCount)}</span>
+                              </div>
+                            )}
+                            {item.metadata?.vScore && (
+                              <div className="flex items-center gap-1.5">
+                                 <TrendingUp className="w-3 h-3 text-blue-500" />
+                                 <span className="text-[10px] font-black text-blue-500">{item.metadata.vScore}% VIRAL</span>
+                              </div>
+                            )}
+                            {item.metadata?.publishedAt && (
+                              <div className="flex items-center gap-1.5">
+                                 <Calendar className="w-3 h-3 text-zinc-600" />
+                                 <span className="text-[10px] font-black text-zinc-400">{new Date(item.metadata.publishedAt).toLocaleDateString()}</span>
+                              </div>
+                            )}
+                         </div>
+                       </>
+                     )}
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2 rich-text-editor">
-                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-1">Research Notes</label>
+                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] px-1">Research Observations & Strategies</label>
                 <div className="bg-black/40 border border-zinc-800 rounded-2xl overflow-hidden">
                   <ReactQuill 
                     theme="snow"
                     value={content}
                     onChange={setContent}
                     modules={modules}
-                    placeholder="Write your observations, hooks, or notes about this item..."
+                    placeholder="Write your observations, viral hooks, or strategy notes here..."
                     className="quill-dark"
                   />
                 </div>
               </div>
-
-              {item && (
-                <div className="bg-zinc-800/30 border border-zinc-800/50 rounded-2xl p-4">
-                  <p className="text-[10px] font-medium text-zinc-500 mb-2 uppercase tracking-tight">Inter-linked Preview</p>
-                  <div className="flex items-center gap-3">
-                      {item.thumbnail && <img src={item.thumbnail} className="w-12 h-12 rounded-lg object-cover" alt="" />}
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold text-zinc-200 truncate">{item.title}</p>
-                        <p className="text-[10px] text-zinc-500 capitalize">{item.type} • Linked Reference</p>
-                      </div>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Footer */}
-            <div className="p-6 border-t border-zinc-800 flex justify-end gap-3">
+            <div className="p-6 border-t border-zinc-800 flex justify-end gap-3 shrink-0">
               <button
                 onClick={onClose}
                 className="px-6 py-2.5 rounded-xl text-xs font-bold text-zinc-400 hover:text-white transition-colors"
@@ -146,7 +291,7 @@ export default function ResearchNotesModal({ isOpen, onClose, item, onSave }) {
                 className="px-6 py-2.5 bg-white text-black rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-zinc-200 transition-all disabled:opacity-50"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                Save to Hub
+                {dbId ? 'Update Research' : 'Save to Hub'}
               </button>
             </div>
           </motion.div>

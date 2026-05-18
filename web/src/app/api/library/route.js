@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { saveLibraryItem, getLibraryItems, deleteLibraryItem } from "@/lib/cache/turso";
+import { saveLibraryItem, getLibraryItems, deleteLibraryItem, getLibraryItemByReference } from "@/lib/cache/turso";
 import { apiSuccess, apiError } from "@/lib/utils/response";
 
 export async function GET(req) {
@@ -9,6 +9,12 @@ export async function GET(req) {
 
     const { searchParams } = new URL(req.url);
     const type = searchParams.get("type");
+    const referenceId = searchParams.get("reference_id");
+
+    if (referenceId) {
+      const item = await getLibraryItemByReference(userId, referenceId);
+      return apiSuccess({ item });
+    }
 
     const items = await getLibraryItems(userId, type);
     return apiSuccess({ items });

@@ -176,6 +176,7 @@ export default function VideoCard({ item, setHoverInfo, setSelectedVideo, format
           title: item.snippet.title,
           thumbnail: item.snippet.thumbnails.medium.url,
           metadata: {
+            thumbnail: item.snippet.thumbnails.medium.url,
             channelId: item.snippet.channelId,
             channelTitle: item.snippet.channelTitle,
             publishedAt: item.snippet.publishedAt,

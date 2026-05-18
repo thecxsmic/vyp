@@ -559,6 +559,31 @@ export async function getLibraryItems(userId, type = null) {
 }
 
 /**
+ * Get a specific library item by reference_id
+ */
+export async function getLibraryItemByReference(userId, referenceId) {
+  if (!process.env.TURSO_DATABASE_URL || !referenceId) return null;
+
+  try {
+    const rs = await client.execute({
+      sql: "SELECT * FROM library_items WHERE user_id = ? AND reference_id = ? LIMIT 1",
+      args: [userId, referenceId],
+    });
+
+    if (rs.rows.length === 0) return null;
+
+    const row = rs.rows[0];
+    return {
+      ...row,
+      metadata: JSON.parse(row.metadata)
+    };
+  } catch (error) {
+    console.error("[Turso] Get Library Item By Reference Error:", error);
+    return null;
+  }
+}
+
+/**
  * Delete a library item
  */
 export async function deleteLibraryItem(userId, itemId) {

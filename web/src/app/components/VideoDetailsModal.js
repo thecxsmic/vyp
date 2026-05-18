@@ -3,14 +3,44 @@
 import { useState } from "react";
 import { getEarnings } from "@/lib/utils/earnings";
 import Link from "next/link";
-import { Save } from "lucide-react";
+import { Save, Edit3, CheckCircle2 } from "lucide-react";
 import ResearchNotesModal from "./ResearchNotesModal";
+import { useEffect } from "react";
 
 export default function VideoDetailsModal({ selectedVideo, setSelectedVideo, filters, formatNumber }) {
   const [activeTab, setActiveTab] = useState("stats");
   const [copying, setCopying] = useState(false);
   const [copyStates, setCopyStates] = useState({});
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
+  const [savedItem, setSavedItem] = useState(null);
+  const [checkingSaved, setCheckingSaved] = useState(false);
+
+  useEffect(() => {
+    if (selectedVideo) {
+      checkSavedStatus();
+    } else {
+      setSavedItem(null);
+    }
+  }, [selectedVideo]);
+
+  const checkSavedStatus = async () => {
+    if (!selectedVideo) return;
+    setCheckingSaved(true);
+    try {
+      const videoId = selectedVideo.item.id.videoId || selectedVideo.item.id;
+      const res = await fetch(`/api/library?reference_id=${videoId}`);
+      const data = await res.json();
+      if (data.success && data.item) {
+        setSavedItem(data.item);
+      } else {
+        setSavedItem(null);
+      }
+    } catch (err) {
+      console.error("Failed to check saved status:", err);
+    } finally {
+      setCheckingSaved(false);
+    }
+  };
 
   if (!selectedVideo) return null;
 
@@ -81,10 +111,16 @@ ${item.snippet?.description || item.description || "No description found."}
           <div className="absolute top-4 right-4 flex gap-2 z-10">
             <button 
               onClick={() => setIsNotesModalOpen(true)}
-              className="bg-black/40 hover:bg-black/60 backdrop-blur-md p-2 rounded-full border border-white/10 transition-colors"
-              title="Save to Research Hub"
+              className={`backdrop-blur-md p-2 rounded-full border border-white/10 transition-all ${
+                savedItem ? 'bg-green-500/20 hover:bg-green-500/40 border-green-500/30' : 'bg-black/40 hover:bg-black/60'
+              }`}
+              title={savedItem ? "Edit Research Note" : "Save to Research Hub"}
             >
-              <Save className="w-4 h-4 text-white" />
+              {savedItem ? (
+                <Edit3 className="w-4 h-4 text-green-400" />
+              ) : (
+                <Save className="w-4 h-4 text-white" />
+              )}
             </button>
             <button 
               onClick={() => setSelectedVideo(null)} 
@@ -500,12 +536,20 @@ ${item.snippet?.description || item.description || "No description found."}
       <ResearchNotesModal
         isOpen={isNotesModalOpen}
         onClose={() => setIsNotesModalOpen(false)}
+        onSave={() => {
+          checkSavedStatus();
+          setIsNotesModalOpen(false);
+        }}
+        onViewDetails={() => setIsNotesModalOpen(false)}
         item={{
+          dbId: savedItem?.id,
+          content: savedItem?.content,
           id: selectedVideo.item.id.videoId || selectedVideo.item.id,
           type: 'video',
           title: selectedVideo.item.snippet?.title || selectedVideo.item.title,
-          thumbnail: selectedVideo.item.thumbnail || selectedVideo.item.snippet?.thumbnails?.medium?.url,
+          thumbnail: selectedVideo.item.thumbnail || selectedVideo.item.snippet?.thumbnails?.high?.url || selectedVideo.item.snippet?.thumbnails?.medium?.url,
           metadata: {
+            thumbnail: selectedVideo.item.thumbnail || selectedVideo.item.snippet?.thumbnails?.high?.url || selectedVideo.item.snippet?.thumbnails?.medium?.url,
             channelId: selectedVideo.item.snippet?.channelId || selectedVideo.item.channelId,
             channelTitle: selectedVideo.item.snippet?.channelTitle || selectedVideo.item.channelTitle,
             publishedAt: selectedVideo.item.snippet?.publishedAt || selectedVideo.item.publishedAt,

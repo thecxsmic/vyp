@@ -7,7 +7,9 @@ import { generateChannelHistory, calculateAverages } from "@/lib/utils/history";
 import { GrowthChart, SubsChangeChart, EngagementPieChart, RevenueProjectionChart } from "../components/ChannelCharts";
 import VideoCard from "../components/VideoCard";
 import VideoDetailsModal from "../components/VideoDetailsModal";
+import ResearchNotesModal from "../components/ResearchNotesModal";
 import Link from "next/link";
+import { Save, Edit3 } from "lucide-react";
 
 function ChannelsContent() {
   const searchParams = useSearchParams();
@@ -23,6 +25,8 @@ function ChannelsContent() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [copyStates, setCopyStates] = useState({});
+  const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
+  const [savedChannelItem, setSavedChannelItem] = useState(null);
 
   useEffect(() => {
     const channelId = searchParams.get("channelId");
@@ -30,6 +34,28 @@ function ChannelsContent() {
       selectChannel(channelId);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    if (analysisData?.channel) {
+      checkChannelSavedStatus(analysisData.channel.id);
+    } else {
+      setSavedChannelItem(null);
+    }
+  }, [analysisData]);
+
+  const checkChannelSavedStatus = async (channelId) => {
+    try {
+      const res = await fetch(`/api/library?reference_id=${channelId}`);
+      const data = await res.json();
+      if (data.success && data.item) {
+        setSavedChannelItem(data.item);
+      } else {
+        setSavedChannelItem(null);
+      }
+    } catch (err) {
+      console.error("Failed to check channel saved status:", err);
+    }
+  };
 
   const formatNumber = (num) => {
     if (isNaN(num) || num === null || num === undefined) return "0";
@@ -334,6 +360,15 @@ function ChannelsContent() {
                         >
                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                            Find Ecosystem Rivals
+                        </button>
+                        <button 
+                           onClick={() => setIsNotesModalOpen(true)}
+                           className={`text-[9px] font-black px-6 py-2 rounded-xl uppercase tracking-widest transition-all flex items-center gap-2 ${
+                              savedChannelItem ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-zinc-900 text-white hover:bg-zinc-800 border border-white/5'
+                           }`}
+                        >
+                           {savedChannelItem ? <Edit3 className="w-3 h-3" /> : <Save className="w-3 h-3" />}
+                           {savedChannelItem ? 'Edit Research' : 'Save to Hub'}
                         </button>
                      </div>
                      
@@ -968,6 +1003,30 @@ function ChannelsContent() {
           </div>
         )}
       </main>
+
+      {analysisData?.channel && (
+        <ResearchNotesModal 
+          isOpen={isNotesModalOpen}
+          onClose={() => setIsNotesModalOpen(false)}
+          onSave={() => {
+            checkChannelSavedStatus(analysisData.channel.id);
+            setIsNotesModalOpen(false);
+          }}
+          item={{
+            dbId: savedChannelItem?.id,
+            content: savedChannelItem?.content,
+            id: analysisData.channel.id,
+            type: 'channel',
+            title: analysisData.channel.title,
+            thumbnail: analysisData.channel.thumbnail,
+            metadata: {
+              thumbnail: analysisData.channel.thumbnail,
+              customUrl: analysisData.channel.custom_url,
+              statistics: analysisData.channel.statistics
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

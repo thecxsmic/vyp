@@ -2,18 +2,76 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, Video, User, Lightbulb, BarChart3, Trash2, Edit3, ExternalLink, Calendar, Plus, BookOpen, Clock } from 'lucide-react';
+import { Search, Filter, Video, User, Lightbulb, BarChart3, Trash2, Edit3, ExternalLink, Calendar, Plus, BookOpen, Clock, ChevronRight, Eye, Zap, Target, Activity } from 'lucide-react';
 import Link from 'next/link';
+import ResearchNotesModal from '../components/ResearchNotesModal';
+import VideoDetailsModal from '../components/VideoDetailsModal';
 
 export default function LibraryPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedVideoModal, setSelectedVideoModal] = useState(null);
 
   useEffect(() => {
     fetchItems();
   }, [filter]);
+
+  const formatNumber = (num) => {
+    if (isNaN(num) || num === null || num === undefined) return "0";
+    const n = parseInt(num);
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+    if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+    return n.toString();
+  };
+
+  const getIdeaDetails = (item) => {
+    if (item.type !== 'idea') return null;
+    const m = item.metadata || {};
+    
+    // Idea could come from Quick Wins, Trends, or Video Ideas
+    const rationale = m.why || m.opportunity || m.rationale || m.predictedViews;
+    const effort = m.effort || m.difficulty || (m.viralScore ? `${m.viralScore} Viral Score` : null);
+    const timing = m.timing || m.momentum || m.topic;
+
+    return (
+      <div className="bg-zinc-900/30 border border-zinc-900 rounded-2xl p-4 mb-6 space-y-4">
+        {rationale && (
+          <div className="space-y-1">
+            <p className="text-[8px] font-black text-zinc-600 uppercase tracking-widest flex items-center gap-1.5">
+               <Target className="w-2.5 h-2.5" />
+               Strategy / Opportunity
+            </p>
+            <p className="text-[11px] text-zinc-400 leading-relaxed line-clamp-3">{rationale}</p>
+          </div>
+        )}
+        
+        <div className="flex gap-4">
+           {effort && (
+             <div className="space-y-1">
+               <p className="text-[8px] font-black text-zinc-600 uppercase tracking-widest flex items-center gap-1.5">
+                  <Zap className="w-2.5 h-2.5 text-yellow-500" />
+                  Effort / Potential
+               </p>
+               <p className="text-[10px] font-bold text-zinc-300 uppercase">{effort}</p>
+             </div>
+           )}
+           {timing && (
+             <div className="space-y-1">
+               <p className="text-[8px] font-black text-zinc-600 uppercase tracking-widest flex items-center gap-1.5">
+                  <Activity className="w-2.5 h-2.5 text-blue-500" />
+                  Momentum
+               </p>
+               <p className="text-[10px] font-bold text-zinc-300 uppercase">{timing}</p>
+             </div>
+           )}
+        </div>
+      </div>
+    );
+  };
 
   const fetchItems = async () => {
     setLoading(true);
@@ -46,10 +104,67 @@ export default function LibraryPage() {
     }
   };
 
+  const handleEdit = (item) => {
+    setSelectedItem({
+      ...item,
+      dbId: item.id,
+      id: item.reference_id
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleOpenVideoDetails = (item) => {
+    if (item.type !== 'video') return;
+    const thumbnail = item.metadata?.thumbnail || `https://i.ytimg.com/vi/${item.reference_id}/mqdefault.jpg`;
+    setSelectedVideoModal({
+      item: {
+        id: item.reference_id,
+        title: item.title,
+        thumbnail: thumbnail,
+        snippet: {
+          title: item.title,
+          thumbnails: { medium: { url: thumbnail } },
+          channelId: item.metadata?.channelId,
+          channelTitle: item.metadata?.channelTitle,
+          publishedAt: item.metadata?.publishedAt
+        },
+        statistics: item.metadata?.statistics || {}
+      },
+      v: {
+        score: item.metadata?.vScore || 0,
+        level: item.metadata?.vScore > 40 ? 'Viral' : 'Stable',
+        color: item.metadata?.vScore > 40 ? 'from-orange-500 to-red-600' : 'from-blue-500 to-cyan-600',
+        engagement: (parseFloat(item.metadata?.statistics?.likeCount || 0) / Math.max(1, parseInt(item.metadata?.statistics?.viewCount || 1)) * 100).toFixed(2),
+        dailyViews: Math.round(parseInt(item.metadata?.statistics?.viewCount || 0) / 30) // Simplified fallback
+      }
+    });
+  };
+
   const filteredItems = items.filter(item => 
     item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.content.toLowerCase().includes(searchQuery.toLowerCase())
+    (item.content || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const getThumbnail = (item) => {
+    if (item.metadata?.thumbnail) return item.metadata.thumbnail;
+    if (item.type === 'video' && item.reference_id) {
+      return `https://i.ytimg.com/vi/${item.reference_id}/mqdefault.jpg`;
+    }
+    return null;
+  };
+
+  const getChannelLink = (item) => {
+    const channelId = item.type === 'video' ? item.metadata?.channelId : (item.reference_id || item.metadata?.channelId);
+    if (!channelId || channelId === 'undefined') return '#';
+    return `/channels?channelId=${channelId}`;
+  };
+
+  const getYouTubeLink = (item) => {
+    if (item.type === 'video') return `https://youtube.com/watch?v=${item.reference_id}`;
+    const channelId = item.reference_id || item.metadata?.channelId;
+    if (!channelId || channelId === 'undefined') return '#';
+    return `https://youtube.com/channel/${channelId}`;
+  };
 
   const getIcon = (type) => {
     switch (type) {
@@ -148,12 +263,38 @@ export default function LibraryPage() {
                     </div>
                   </div>
 
+                  {/* Visual Context */}
+                  {getThumbnail(item) && (
+                    <div className="relative h-40 mb-6 rounded-2xl overflow-hidden border border-zinc-900 group-hover:border-zinc-700 transition-all">
+                       <img src={getThumbnail(item)} className="w-full h-full object-cover" alt="" />
+                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                       {item.metadata.channelTitle && (
+                         <div className="absolute bottom-3 left-4 right-4 flex justify-between items-end">
+                            <p className="text-[10px] font-black text-white/60 uppercase tracking-widest truncate flex-1">{item.metadata.channelTitle}</p>
+                            {item.type === 'video' && (
+                              <button 
+                                onClick={(e) => { e.preventDefault(); handleOpenVideoDetails(item); }}
+                                className="bg-white/10 hover:bg-white/20 backdrop-blur-md p-1.5 rounded-lg border border-white/5 transition-colors shrink-0 ml-2"
+                              >
+                                <Eye className="w-3 h-3 text-white" />
+                              </button>
+                            )}
+                         </div>
+                       )}
+                    </div>
+                  )}
+
                   {/* Title & Content */}
                   <h3 className="text-xl font-bold text-white mb-4 line-clamp-2 tracking-tight group-hover:text-white/90 transition-colors">{item.title}</h3>
                   
+                  {item.type === 'idea' && getIdeaDetails(item)}
+
                   {item.content && (
-                    <div className="bg-zinc-900/50 border border-zinc-900 rounded-2xl p-4 mb-6 flex-1">
-                       <p className="text-xs text-zinc-400 line-clamp-4 leading-relaxed whitespace-pre-wrap">{item.content}</p>
+                    <div className="bg-zinc-900/50 border border-zinc-900 rounded-2xl p-4 mb-6 flex-1 overflow-hidden">
+                       <div 
+                        className="text-xs text-zinc-400 line-clamp-6 leading-relaxed prose prose-invert prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: item.content }}
+                       />
                     </div>
                   )}
 
@@ -163,19 +304,48 @@ export default function LibraryPage() {
                     </div>
                   )}
 
+                  {/* Actions */}
+                  <div className="flex items-center gap-3 mb-6">
+                    <button 
+                      onClick={() => handleEdit(item)}
+                      className="flex-1 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      Edit Note
+                    </button>
+                    <div className="flex gap-2">
+                       {item.type === 'channel' && (
+                         <Link 
+                            href={getChannelLink(item)}
+                            className="p-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl transition-all"
+                            title="Analyze Channel"
+                          >
+                            <BarChart3 className="w-3.5 h-3.5 text-zinc-500" />
+                          </Link>
+                       )}
+                       <a 
+                        href={getYouTubeLink(item)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl transition-all"
+                        title="View on YouTube"
+                       >
+                         <ExternalLink className="w-3.5 h-3.5 text-zinc-500" />
+                       </a>
+                    </div>
+                  </div>
+
                   {/* Footer Stats */}
                   <div className="mt-auto pt-6 border-t border-zinc-900 flex items-center justify-between">
                      <div className="flex items-center gap-2 text-[10px] text-zinc-600 font-bold uppercase tracking-widest">
                         <Clock className="w-3 h-3" />
                         <span>{new Date(item.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                      </div>
-                     {item.reference_id && (
-                       <Link 
-                        href={item.type === 'video' ? `/channels?channelId=${item.metadata.channelId}` : `/channels?channelId=${item.reference_id}`}
-                        className="text-[10px] font-bold text-zinc-500 hover:text-white flex items-center gap-1.5 transition-colors uppercase tracking-widest"
-                       >
-                         View Source <ExternalLink className="w-3 h-3" />
-                       </Link>
+                     {item.metadata?.vScore && (
+                       <div className="flex items-center gap-2">
+                          <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-tighter">Virality</span>
+                          <span className="text-xs font-black text-blue-500">{item.metadata.vScore}%</span>
+                       </div>
                      )}
                   </div>
                 </div>
@@ -191,7 +361,35 @@ export default function LibraryPage() {
              <p className="text-zinc-500 text-sm max-w-xs mx-auto leading-relaxed font-medium">Start exploring Trend Radar or search for videos to build your inter-linked intelligence repository.</p>
           </div>
         )}
+
+        <ResearchNotesModal 
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          item={selectedItem}
+          onSave={() => {
+            fetchItems();
+            setIsEditModalOpen(false);
+          }}
+          onViewDetails={(item) => {
+            setIsEditModalOpen(false);
+            handleOpenVideoDetails(item);
+          }}
+        />
+
+        <VideoDetailsModal
+          selectedVideo={selectedVideoModal}
+          setSelectedVideo={setSelectedVideoModal}
+          formatNumber={formatNumber}
+          filters={{ region: 'US' }}
+        />
       </div>
+
+      <style jsx global>{`
+        .prose p { margin-bottom: 0.5rem; }
+        .prose p:last-child { margin-bottom: 0; }
+        .prose ul, .prose ol { margin-bottom: 0.5rem; padding-left: 1rem; }
+        .prose li { margin-bottom: 0.25rem; }
+      `}</style>
     </div>
   );
 }

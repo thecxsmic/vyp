@@ -341,6 +341,10 @@ export default function TrendRadar() {
 
   const handleNodeClick = useCallback((node) => {
     const onSave = (item) => {
+      // Ensure we have a reference_id for ideas to allow editing
+      if (item.type === 'idea' && !item.reference_id) {
+        item.reference_id = `id-${btoa(item.title).substring(0, 10)}`;
+      }
       setSelectedNoteItem(item);
       setIsNotesModalOpen(true);
     };
@@ -594,7 +598,9 @@ function MobileCardView({ data, onNodeClick, onSave }) {
           <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500">Quick Wins</h2>
         </div>
         <div className="space-y-3">
-          {data.insights.quickWins.map((win, idx) => (
+          {data.insights.quickWins.map((win, idx) => {
+            const winId = `qw-${btoa(win.idea).substring(0, 10)}`;
+            return (
             <motion.div 
               key={idx}
               initial={{ opacity: 0, x: -20 }}
@@ -604,27 +610,27 @@ function MobileCardView({ data, onNodeClick, onSave }) {
             >
               <div 
                 className={`w-10 h-10 rounded-xl bg-gradient-to-br ${win.effort === 'low' ? 'from-green-500 to-emerald-600' : 'from-yellow-500 to-orange-600'} flex items-center justify-center flex-shrink-0 cursor-pointer`}
-                onClick={() => onNodeClick({ type: 'quickWin', data: win })}
+                onClick={() => onNodeClick({ type: 'quickWin', data: { ...win, id: winId } })}
               >
                 <Lightbulb className="w-5 h-5 text-white" />
               </div>
-              <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onNodeClick({ type: 'quickWin', data: win })}>
+              <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onNodeClick({ type: 'quickWin', data: { ...win, id: winId } })}>
                 <h3 className="text-xs font-bold text-zinc-200 truncate">{win.idea}</h3>
                 <p className="text-[10px] text-zinc-500">{win.timing}</p>
               </div>
               <div className="flex items-center gap-2">
                 <button 
-                  onClick={() => onSave({ type: 'idea', title: win.idea, metadata: win })}
+                  onClick={() => onSave({ type: 'idea', title: win.idea, reference_id: winId, metadata: win })}
                   className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/5"
                 >
                   <Save className="w-4 h-4 text-zinc-400" />
                 </button>
-                <button onClick={() => onNodeClick({ type: 'quickWin', data: win })}>
+                <button onClick={() => onNodeClick({ type: 'quickWin', data: { ...win, id: winId } })}>
                   <ArrowUpRight className="w-4 h-4 text-zinc-700" />
                 </button>
               </div>
             </motion.div>
-          ))}
+          )})}
         </div>
       </section>
 
@@ -635,7 +641,9 @@ function MobileCardView({ data, onNodeClick, onSave }) {
           <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500">Emerging Trends</h2>
         </div>
         <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4">
-          {data.insights.emergingTrends.map((trend, idx) => (
+          {data.insights.emergingTrends.map((trend, idx) => {
+            const trendId = `tr-${btoa(trend.topic).substring(0, 10)}`;
+            return (
             <motion.div 
               key={idx}
               initial={{ opacity: 0, scale: 0.9 }}
@@ -646,13 +654,13 @@ function MobileCardView({ data, onNodeClick, onSave }) {
               <div className="flex justify-between items-start mb-3">
                 <div 
                   className={`w-8 h-8 rounded-lg bg-gradient-to-br ${trend.momentum === 'hot' ? 'from-red-500 to-orange-600' : 'from-blue-500 to-cyan-600'} flex items-center justify-center cursor-pointer`}
-                  onClick={() => onNodeClick({ type: 'trend', data: trend })}
+                  onClick={() => onNodeClick({ type: 'trend', data: { ...trend, id: trendId } })}
                 >
                   <Flame className="w-4 h-4 text-white" />
                 </div>
                 <div className="flex items-center gap-2">
                   <button 
-                    onClick={() => onSave({ type: 'idea', title: trend.topic, metadata: trend })}
+                    onClick={() => onSave({ type: 'idea', title: trend.topic, reference_id: trendId, metadata: trend })}
                     className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/5"
                   >
                     <Save className="w-3.5 h-3.5 text-zinc-400" />
@@ -662,7 +670,7 @@ function MobileCardView({ data, onNodeClick, onSave }) {
                   </div>
                 </div>
               </div>
-              <div className="cursor-pointer" onClick={() => onNodeClick({ type: 'trend', data: trend })}>
+              <div className="cursor-pointer" onClick={() => onNodeClick({ type: 'trend', data: { ...trend, id: trendId } })}>
                 <h3 className="text-xs font-bold text-zinc-200 mb-1 line-clamp-1">{trend.topic}</h3>
                 <p className="text-[10px] text-zinc-500 truncate mb-3">{trend.estimatedViews} potential</p>
                 <div className="bg-white/5 rounded-lg p-2">
@@ -670,7 +678,7 @@ function MobileCardView({ data, onNodeClick, onSave }) {
                 </div>
               </div>
             </motion.div>
-          ))}
+          )})}
         </div>
       </section>
 
@@ -681,7 +689,9 @@ function MobileCardView({ data, onNodeClick, onSave }) {
           <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500">AI Video Concepts</h2>
         </div>
         <div className="space-y-4">
-          {data.insights.videoIdeas.map((idea, idx) => (
+          {data.insights.videoIdeas.map((idea, idx) => {
+            const ideaId = `vi-${btoa(idea.title).substring(0, 10)}`;
+            return (
             <motion.div 
               key={idx}
               initial={{ opacity: 0, y: 10 }}
@@ -690,10 +700,10 @@ function MobileCardView({ data, onNodeClick, onSave }) {
               className="bg-gradient-to-br from-fuchsia-900/10 to-violet-900/10 backdrop-blur-xl border border-fuchsia-500/10 rounded-2xl p-5 active:scale-[0.98] transition-transform"
             >
               <div className="flex justify-between items-start mb-3">
-                <h3 className="text-sm font-bold text-white max-w-[70%] leading-tight cursor-pointer" onClick={() => onNodeClick({ type: 'videoIdea', data: idea })}>{idea.title}</h3>
+                <h3 className="text-sm font-bold text-white max-w-[70%] leading-tight cursor-pointer" onClick={() => onNodeClick({ type: 'videoIdea', data: { ...idea, id: ideaId } })}>{idea.title}</h3>
                 <div className="flex items-center gap-2">
                   <button 
-                    onClick={() => onSave({ type: 'idea', title: idea.title, metadata: idea })}
+                    onClick={() => onSave({ type: 'idea', title: idea.title, reference_id: ideaId, metadata: idea })}
                     className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/5"
                   >
                     <Save className="w-4 h-4 text-zinc-400" />
