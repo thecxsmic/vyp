@@ -16,6 +16,7 @@ const navItems = [
   { name: 'Trends', href: '/radar', icon: Zap },
   { name: 'Channels', href: '/channels', icon: Users },
   { name: 'Competitors', href: '/competitors', icon: Trophy },
+  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Library', href: '/library', icon: BookOpen },
 ];
 

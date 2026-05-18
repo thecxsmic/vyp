@@ -137,6 +137,22 @@ async function syncSchema() {
     `);
     console.log("✓ Table 'library_items' created or already exists.");
 
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS channel_snapshots (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        channel_id TEXT,
+        user_id TEXT,
+        subscribers INTEGER,
+        views INTEGER,
+        videos INTEGER,
+        date TEXT,
+        timestamp INTEGER,
+        UNIQUE(channel_id, date),
+        FOREIGN KEY (channel_id) REFERENCES channels (id)
+      )
+    `);
+    console.log("✓ Table 'channel_snapshots' created or already exists.");
+
     console.log("Schema sync complete!");  } catch (error) {
     console.error("Error syncing schema:", error);
     process.exit(1);

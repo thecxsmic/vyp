@@ -671,3 +671,49 @@ export async function unsetUserChannel(userId) {
     return { success: false, error: error.message };
   }
 }
+
+/**
+ * Save a daily snapshot of a channel's statistics
+ */
+export async function saveChannelSnapshot(userId, channel) {
+  if (!process.env.TURSO_DATABASE_URL || !channel) return { success: false };
+
+  try {
+    const now = Date.now();
+    const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    
+    const subscribers = parseInt(channel.statistics?.subscriberCount || 0);
+    const views = parseInt(channel.statistics?.viewCount || 0);
+    const videos = parseInt(channel.statistics?.videoCount || 0);
+
+    await client.execute({
+      sql: `INSERT OR REPLACE INTO channel_snapshots (channel_id, user_id, subscribers, views, videos, date, timestamp)
+            VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      args: [channel.id, userId, subscribers, views, videos, date, now],
+    });
+    
+    return { success: true };
+  } catch (error) {
+    console.error("[Turso] Save Snapshot Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Get all historical snapshots for a channel
+ */
+export async function getChannelSnapshots(channelId) {
+  if (!process.env.TURSO_DATABASE_URL) return [];
+
+  try {
+    const rs = await client.execute({
+      sql: "SELECT * FROM channel_snapshots WHERE channel_id = ? ORDER BY date ASC",
+      args: [channelId],
+    });
+
+    return rs.rows;
+  } catch (error) {
+    console.error("[Turso] Get Snapshots Error:", error);
+    return [];
+  }
+}
