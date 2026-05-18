@@ -144,7 +144,9 @@ export default function TrendRadar() {
   };
 
   const handleSave = (type, title, metadata) => {
-    const reference_id = `${type.substring(0,2)}-${btoa(title).substring(0, 10)}`;
+    // Robust Base64 for Unicode characters
+    const b64 = typeof window !== 'undefined' ? btoa(encodeURIComponent(title).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1))) : btoa(title);
+    const reference_id = `${type.substring(0,2)}-${b64.substring(0, 10)}`;
     setSelectedNoteItem({ type: 'idea', title, reference_id, metadata });
     setIsNotesModalOpen(true);
   };
