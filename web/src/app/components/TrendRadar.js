@@ -174,7 +174,7 @@ export default function TrendRadar() {
             <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
               <BarChart3 className="w-5 h-5 text-black" />
             </div>
-            <h1 className="font-display text-lg font-black tracking-tight uppercase">Radar</h1>
+            <h1 className="font-display text-lg tracking-tight uppercase">Radar</h1>
           </div>
           
           <div className="flex items-center gap-4">
