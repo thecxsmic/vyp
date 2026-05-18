@@ -49,24 +49,21 @@ export default function VideoCard({ item, setHoverInfo, setSelectedVideo, format
 
   return (
     <div 
-      className="group relative border transition-all duration-500 flex flex-col md:flex-row min-h-[18rem] hover:-translate-y-1 rounded-[2rem] overflow-hidden"
+      className="group relative border flex flex-col md:flex-row min-h-[18rem] rounded-[2rem] overflow-hidden transition-all duration-500 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-2 bg-[rgba(var(--card-color),0.03)] hover:bg-[rgba(var(--card-color),0.12)] border-[rgba(var(--card-color),0.25)] hover:border-[rgba(var(--card-color),0.5)]"
       style={{ 
-        backgroundColor: `rgba(${color}, 0.03)`,
-        borderColor: `rgba(${color}, 0.25)`,
+        "--card-color": color,
         boxShadow: `0 0 80px rgba(${color}, 0.08)`
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.backgroundColor = `rgba(${color}, 0.12)`;
-        e.currentTarget.style.borderColor = `rgba(${color}, 0.5)`;
+        e.currentTarget.style.boxShadow = `0 20px 80px rgba(${color}, 0.15)`;
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.backgroundColor = `rgba(${color}, 0.03)`;
-        e.currentTarget.style.borderColor = `rgba(${color}, 0.25)`;
+        e.currentTarget.style.boxShadow = `0 0 80px rgba(${color}, 0.08)`;
       }}
     >
       {/* Background Glow */}
       <div 
-        className="absolute inset-0 opacity-0 group-hover:opacity-40 transition-opacity duration-1000 pointer-events-none"
+        className="absolute inset-0 opacity-0 group-hover:opacity-40 transition-opacity duration-700 pointer-events-none"
         style={{ 
           background: `radial-gradient(circle at 30% 50%, rgba(${color}, 0.4), transparent 80%)`
         }}
@@ -76,7 +73,7 @@ export default function VideoCard({ item, setHoverInfo, setSelectedVideo, format
         <img 
           src={item.snippet.thumbnails.medium.url} 
           alt="" 
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" 
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
         <div className="absolute bottom-6 left-6 flex flex-col gap-2">
@@ -150,15 +147,7 @@ export default function VideoCard({ item, setHoverInfo, setSelectedVideo, format
               </button>
               <button 
                 onClick={() => setSelectedVideo({ item, v, dominantColor: color })} 
-                className="w-full sm:w-auto shrink-0 text-[10px] font-black tracking-[0.2em] uppercase bg-white text-black px-8 py-3 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl"
-                onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = `rgba(${color}, 1)`;
-                    e.currentTarget.style.color = 'white';
-                }}
-                onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'white';
-                    e.currentTarget.style.color = 'black';
-                }}
+                className="w-full sm:w-auto shrink-0 text-[10px] font-black tracking-[0.2em] uppercase bg-white text-black px-8 py-3 rounded-2xl hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl hover:bg-[rgba(var(--card-color),1)] hover:text-white"
                 style={{ boxShadow: `0 10px 30px rgba(${color}, 0.3)` }}
               >
                 View Details

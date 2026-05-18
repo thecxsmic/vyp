@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { calculateViralityScore } from "@/lib/ranking/virality";
 import VideoCard from "./components/VideoCard";
 import VideoDetailsModal from "./components/VideoDetailsModal";
-import { Search, Zap, BarChart3, TrendingUp, Target, LayoutDashboard } from 'lucide-react';
+import { Search, Zap, BarChart3, TrendingUp, Target, LayoutDashboard, Users, SlidersHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
@@ -12,6 +12,7 @@ export default function Home() {
   const [hoverInfo, setHoverInfo] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     region: "US",
     lang: "en",
@@ -159,13 +160,24 @@ export default function Home() {
                 onChange={(e) => setQuery(e.target.value)} 
                 className="w-full py-4 px-4 bg-transparent outline-none text-base font-medium placeholder-accents-3 text-white relative z-10" 
               />
-              <button 
-                type="submit" 
-                disabled={loading} 
-                className="mr-2 bg-white text-black px-6 py-2 rounded-xl font-bold hover:opacity-90 active:scale-95 transition-all text-sm relative z-10"
-              >
-                Search
-              </button>
+              <div className="flex items-center gap-2 pr-2 relative z-10">
+                {hasSearched && (
+                  <button 
+                    type="button"
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={`p-2 rounded-xl transition-all ${showFilters ? 'bg-white/10 text-white' : 'text-accents-4 hover:text-white'}`}
+                  >
+                    <SlidersHorizontal className="w-4 h-4" />
+                  </button>
+                )}
+                <button 
+                  type="submit" 
+                  disabled={loading} 
+                  className="bg-white text-black px-6 py-2 rounded-xl font-bold hover:opacity-90 active:scale-95 transition-all text-sm"
+                >
+                  Search
+                </button>
+              </div>
             </div>
             <AnimatePresence>
               {loading && (
@@ -187,8 +199,12 @@ export default function Home() {
 
           <motion.div 
             initial={false}
-            animate={{ opacity: hasSearched ? 0 : 1, height: hasSearched ? 0 : 'auto' }}
-            className="mt-8 flex flex-wrap justify-center gap-3 overflow-hidden"
+            animate={{ 
+              opacity: (!hasSearched || showFilters) ? 1 : 0, 
+              height: (!hasSearched || showFilters) ? 'auto' : 0,
+              marginTop: (!hasSearched || showFilters) ? (hasSearched ? 16 : 32) : 0
+            }}
+            className="flex flex-wrap justify-center gap-3 overflow-hidden"
           >
              {['region', 'order', 'uploadDate', 'duration'].map((filter) => (
                 <div key={filter} className="w-[calc(50%-0.4rem)] md:w-auto">
@@ -224,22 +240,61 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="mb-12 grid grid-cols-1 md:grid-cols-3 gap-4"
+                className="mb-12 space-y-6"
               >
-                {[
-                  { label: 'Market Volume', value: formatNumber(results.reduce((acc, item) => acc + parseInt(item.statistics?.viewCount || 0), 0)), sub: 'Total views in niche', icon: BarChart3 },
-                  { label: 'Growth Trend', value: results.length > 25 ? 'High' : 'Steady', sub: 'Content momentum', icon: TrendingUp },
-                  { label: 'Opportunity', value: `${((results.reduce((acc, item) => acc + calculateViralityScore(item).score, 0) / results.length) * (1 - (results.length / 100))).toFixed(0)}%`, sub: 'Viral potential', icon: Target },
-                ].map((stat, i) => (
-                  <div key={i} className="bg-white/[0.02] border border-white/5 p-6 rounded-2xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                      <stat.icon className="w-12 h-12" />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[
+                    { label: 'Market Volume', value: formatNumber(results.reduce((acc, item) => acc + parseInt(item.statistics?.viewCount || 0), 0)), sub: 'Total views in niche', icon: BarChart3, color: 'text-white' },
+                    { label: 'Growth Trend', value: results.length > 25 ? 'High' : 'Steady', sub: 'Content momentum', icon: TrendingUp, color: 'text-[#00dfd8]' },
+                    { label: 'Opportunity', value: `${((results.reduce((acc, item) => acc + calculateViralityScore(item).score, 0) / results.length) * (1 - (results.length / 100))).toFixed(0)}%`, sub: 'Viral potential', icon: Target, color: 'text-geist-success' },
+                  ].map((stat, i) => (
+                    <div key={i} className="bg-white/[0.02] border border-white/5 p-6 rounded-2xl relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <stat.icon className="w-12 h-12" />
+                      </div>
+                      <p className="text-[10px] font-bold text-accents-4 uppercase tracking-wider mb-2">{stat.label}</p>
+                      <div className={`text-3xl font-bold tracking-tight mb-1 ${stat.color}`}>{stat.value}</div>
+                      <p className="text-[10px] text-accents-3 font-medium">{stat.sub}</p>
                     </div>
-                    <p className="text-[10px] font-bold text-accents-4 uppercase tracking-wider mb-2">{stat.label}</p>
-                    <div className="text-3xl font-bold text-white tracking-tight mb-1">{stat.value}</div>
-                    <p className="text-[10px] text-accents-3 font-medium">{stat.sub}</p>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-white/[0.01] border border-white/5 p-5 rounded-2xl flex items-center justify-between group">
+                    <div>
+                      <p className="text-[10px] font-bold text-accents-4 uppercase tracking-wider mb-1">Avg Performance</p>
+                      <div className="text-xl font-bold text-white">{formatNumber(results.reduce((acc, item) => acc + parseInt(item.statistics?.viewCount || 0), 0) / results.length)}</div>
+                    </div>
+                    <div className="flex items-end gap-1 h-8 opacity-40 group-hover:opacity-100 transition-opacity">
+                      {[0.3, 0.6, 0.4, 0.8, 0.5].map((h, i) => <div key={i} className="w-1 bg-geist-success rounded-t-sm" style={{ height: `${h * 100}%` }}></div>)}
+                    </div>
                   </div>
-                ))}
+
+                  <div className="bg-white/[0.01] border border-white/5 p-5 rounded-2xl flex items-center justify-between group">
+                    <div>
+                      <p className="text-[10px] font-bold text-accents-4 uppercase tracking-wider mb-1">Niche Engagement</p>
+                      <div className="text-xl font-bold text-white">{(results.reduce((acc, item) => acc + parseFloat(calculateViralityScore(item).engagement), 0) / results.length).toFixed(2)}%</div>
+                    </div>
+                    <div className="w-8 h-8 rounded-full border-2 border-white/10 flex items-center justify-center relative">
+                      <div className="absolute inset-0 border-2 border-[#00dfd8] rounded-full border-t-transparent group-hover:rotate-180 transition-transform duration-1000"></div>
+                      <Zap className="w-3 h-3 text-[#00dfd8]" />
+                    </div>
+                  </div>
+
+                  <div className="bg-white/[0.01] border border-white/5 p-5 rounded-2xl flex items-center justify-between group">
+                    <div>
+                      <p className="text-[10px] font-bold text-accents-4 uppercase tracking-wider mb-1">Unique Channels</p>
+                      <div className="text-xl font-bold text-white">{new Set(results.map(i => i.snippet.channelId || i.snippet.channelTitle)).size}</div>
+                    </div>
+                    <div className="flex -space-x-2">
+                      {[...Array(3)].map((_, i) => (
+                        <div key={i} className="w-6 h-6 rounded-full bg-white/10 border border-black flex items-center justify-center text-[8px] font-bold text-white uppercase">
+                          <Users className="w-3 h-3" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </motion.section>
             )}
           </AnimatePresence>
