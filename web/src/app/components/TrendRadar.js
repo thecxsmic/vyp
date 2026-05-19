@@ -179,7 +179,9 @@ export default function TrendRadar() {
             <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
               <BarChart3 className="w-5 h-5 text-black" />
             </div>
-            <h1 className="font-display text-lg tracking-tight uppercase">Radar</h1>
+            <h1 className="font-display text-lg tracking-tight uppercase flex items-center gap-3">
+              Radar <span className="text-zinc-600 font-normal hidden sm:inline">/ {selectedChannel?.title || 'Global'}</span>
+            </h1>
           </div>
           
           <div className="flex items-center gap-4">
@@ -190,8 +192,8 @@ export default function TrendRadar() {
               </span>
             )}
             {lastScanTime && !loading && (
-              <span className="text-xs text-zinc-500 hidden sm:inline flex items-center gap-1.5">
-                <BarChart3 className="w-3 h-3" />
+              <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-tighter hidden sm:inline-flex items-center gap-1.5 whitespace-nowrap">
+                <BarChart3 className="w-3.5 h-3.5" />
                 Last scan: {getCacheAge()}
               </span>
             )}
@@ -205,7 +207,7 @@ export default function TrendRadar() {
               ) : (
                 <RefreshCw className="w-4 h-4" />
               )}
-              {loading ? 'Scanning' : 'Scan'}
+              <span className="hidden sm:inline">{loading ? 'Scanning' : 'Scan'}</span>
             </button>
           </div>
         </div>
@@ -430,7 +432,7 @@ function SummaryCard({ title, value, icon: Icon, color }) {
     <div className="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800 hover:border-zinc-700 transition-colors">
       <div className="flex items-center gap-3 mb-4">
         <Icon className={`w-4 h-4 ${color}`} />
-        <span className="text-xs font-medium text-zinc-500 uppercase tracking-widest">{title}</span>
+        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{title}</span>
       </div>
       <p className="text-3xl font-semibold tracking-tight">{value}</p>
     </div>

@@ -325,6 +325,14 @@ export default function CompetitorsPage() {
     { id: 'audience', label: 'Reach Analysis', icon: Users }
   ];
 
+  const getCacheAge = () => {
+    if (!lastScanTime) return '';
+    const mins = Math.floor((Date.now() - lastScanTime) / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    return `${Math.floor(mins/60)}h ago`;
+  };
+
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-white selection:text-black">
       <ResearchNotesModal
@@ -340,20 +348,22 @@ export default function CompetitorsPage() {
             <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
               <Shield className="w-5 h-5 text-black" />
             </div>
-            <h1 className="font-display text-lg tracking-tight uppercase">Competitors</h1>
+            <h1 className="font-display text-lg tracking-tight uppercase flex items-center gap-3">
+              Competitors <span className="text-zinc-600 font-normal hidden sm:inline">/ {selectedChannel?.title || 'Global'}</span>
+            </h1>
           </div>
           
           <div className="flex items-center gap-4">
             {searchParams.get('analysisId') && data && !loading && lastEmailSentAt && (
-              <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-tighter hidden sm:inline-flex items-center gap-1.5 whitespace-nowrap">
-                <Mail className="w-3 h-3" />
+              <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-tighter hidden sm:inline-flex items-center gap-1.5 whitespace-nowrap">
+                <Mail className="w-3.5 h-3.5" />
                 Last Sent: {new Date(lastEmailSentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
             )}
             {lastScanTime && !loading && (
-              <span className="text-xs text-zinc-500 hidden sm:inline-flex items-center gap-1.5 whitespace-nowrap">
-                <History className="w-3 h-3" />
-                {new Date(lastScanTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-tighter hidden sm:inline-flex items-center gap-1.5 whitespace-nowrap">
+                <BarChart3 className="w-3.5 h-3.5" />
+                Last scan: {getCacheAge()}
               </span>
             )}
             <button
@@ -453,7 +463,7 @@ export default function CompetitorsPage() {
               {activeTab === 'market' && (
                 <div className="space-y-12">
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    <div className="lg:col-span-8 p-8 rounded-3xl bg-zinc-900/30 border border-zinc-800 backdrop-blur-sm">
+                    <div className="lg:col-span-8 p-8 rounded-2xl bg-zinc-900/30 border border-zinc-800 backdrop-blur-sm">
                       <div className="flex items-center justify-between mb-8">
                         <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
                           <BarChart3 className="w-4 h-4" /> Strategic Radar
@@ -465,7 +475,7 @@ export default function CompetitorsPage() {
                       </div>
                     </div>
 
-                    <div className="lg:col-span-4 p-8 rounded-3xl bg-white text-black">
+                    <div className="lg:col-span-4 p-8 rounded-2xl bg-white text-black">
                       <div className="flex items-center gap-4 mb-10">
                         <img src={data.baseChannel.thumbnail} className="w-12 h-12 rounded-full" alt="" />
                         <div>
@@ -502,7 +512,7 @@ export default function CompetitorsPage() {
 
               {activeTab === 'content' && (
                 <div className="space-y-10">
-                  <div className="p-8 rounded-3xl bg-zinc-900/30 border border-zinc-800 backdrop-blur-sm">
+                  <div className="p-8 rounded-2xl bg-zinc-900/30 border border-zinc-800 backdrop-blur-sm">
                     <div className="flex items-center justify-between mb-10">
                       <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
                         <MousePointer2 className="w-4 h-4" /> Performance Scatter
@@ -542,7 +552,7 @@ export default function CompetitorsPage() {
 
               {activeTab === 'growth' && (
                 <div className="space-y-10">
-                  <div className="p-8 rounded-3xl bg-zinc-900/30 border border-zinc-800 backdrop-blur-sm">
+                  <div className="p-8 rounded-2xl bg-zinc-900/30 border border-zinc-800 backdrop-blur-sm">
                     <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-10 flex items-center gap-2">
                       <Database className="w-4 h-4" /> Growth Benchmarks
                     </h3>
@@ -566,7 +576,7 @@ export default function CompetitorsPage() {
                         ))}
                       </div>
                     </div>
-                    <div className="p-8 rounded-3xl bg-blue-600/10 border border-blue-500/20 flex flex-col justify-center text-center">
+                    <div className="p-8 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex flex-col justify-center text-center">
                        <Zap className="w-8 h-8 text-blue-500 mx-auto mb-6" />
                        <h4 className="text-lg font-bold mb-2 tracking-tight">Predictive Insight</h4>
                        <p className="text-sm text-zinc-400 leading-relaxed max-w-xs mx-auto">
@@ -579,7 +589,7 @@ export default function CompetitorsPage() {
 
               {activeTab === 'audience' && (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                  <div className="lg:col-span-7 p-8 rounded-3xl bg-zinc-900/30 border border-zinc-800 backdrop-blur-sm">
+                  <div className="lg:col-span-7 p-8 rounded-2xl bg-zinc-900/30 border border-zinc-800 backdrop-blur-sm">
                     <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-10 flex items-center gap-2">
                       <PieChart className="w-4 h-4" /> Audience Engagement
                     </h3>
@@ -590,7 +600,7 @@ export default function CompetitorsPage() {
 
                   <div className="lg:col-span-5 space-y-6">
                     <h4 className="text-sm font-bold uppercase tracking-widest text-zinc-600">Reach Distribution</h4>
-                    <div className="space-y-8 p-8 rounded-3xl bg-zinc-900/30 border border-zinc-800">
+                    <div className="space-y-8 p-8 rounded-2xl bg-zinc-900/30 border border-zinc-800">
                       <AudienceMetric label="Retention Score" value="84%" color="bg-green-500" />
                       <AudienceMetric label="Click-Through Rate" value="6.2%" color="bg-blue-500" />
                       <AudienceMetric label="Conversion Velocity" value="3.1%" color="bg-purple-500" />
@@ -629,7 +639,7 @@ function MetricRow({ label, value }) {
 
 function ContentInsightCard({ title, value, desc }) {
   return (
-    <div className="p-6 rounded-3xl bg-zinc-900/30 border border-zinc-800">
+    <div className="p-6 rounded-2xl bg-zinc-900/30 border border-zinc-800">
       <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest mb-4">{title}</p>
       <h4 className="text-base font-bold text-white mb-2">{value}</h4>
       <p className="text-xs text-zinc-500 leading-relaxed">{desc}</p>
@@ -661,7 +671,7 @@ function CompetitorCard({ comp, baseSubs, onSave }) {
                     'text-blue-500';
 
   return (
-    <div className="group p-6 rounded-3xl bg-zinc-900/30 border border-zinc-800 hover:bg-zinc-900/50 transition-all flex flex-col gap-6">
+    <div className="group p-6 rounded-2xl bg-zinc-900/30 border border-zinc-800 hover:bg-zinc-900/50 transition-all flex flex-col gap-6">
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-4">
           <img src={comp.thumbnail} className="w-12 h-12 rounded-full grayscale group-hover:grayscale-0 transition-all" alt="" />

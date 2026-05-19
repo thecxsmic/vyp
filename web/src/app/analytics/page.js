@@ -90,6 +90,7 @@ export default function AnalyticsPage() {
   const [data, setData] = useState({ snapshots: [], channel: null, videos: [] });
   const [error, setError] = useState(null);
   const [syncing, setSyncing] = useState(false);
+  const [lastScanTime, setLastScanTime] = useState(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -102,6 +103,7 @@ export default function AnalyticsPage() {
           channel: json.channel,
           videos: json.videos || []
         });
+        setLastScanTime(Date.now());
         
         // If no snapshots today, trigger a sync
         const today = new Date().toISOString().split('T')[0];
@@ -125,6 +127,7 @@ export default function AnalyticsPage() {
       const res = await fetch('/api/analytics', { method: 'POST' });
       const json = await res.json();
       if (json.success) {
+        setLastScanTime(Date.now());
         // Refresh data
         const refreshRes = await fetch('/api/analytics');
         const refreshJson = await refreshRes.json();
@@ -146,6 +149,14 @@ export default function AnalyticsPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const getCacheAge = () => {
+    if (!lastScanTime) return '';
+    const mins = Math.floor((Date.now() - lastScanTime) / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    return `${Math.floor(mins/60)}h ago`;
+  };
 
   // Metrics Calculations
   const metrics = useMemo(() => {
@@ -269,18 +280,39 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="p-6 md:p-10 space-y-10 max-w-[1600px] mx-auto pb-24">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-geist-success animate-pulse"></div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-accents-4">Real-time Intelligence</span>
+    <div className="min-h-screen bg-black text-white font-sans selection:bg-white selection:text-black">
+      {/* Header */}
+      <nav className="sticky top-0 z-50 border-b border-zinc-800 bg-black/80 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
+              <BarChart3 className="w-5 h-5 text-black" />
+            </div>
+            <h1 className="font-display text-lg tracking-tight uppercase flex items-center gap-3">
+              Analytics <span className="text-zinc-600 font-normal hidden sm:inline">/ {data.channel?.title || 'Loading'}</span>
+            </h1>
           </div>
-          <h1 className="text-4xl font-black uppercase tracking-tighter italic flex items-center gap-4">
-            Analytics <span className="text-accents-2 font-normal not-italic">/ {data.channel.title}</span>
-          </h1>
+          
+          <div className="flex items-center gap-4">
+            {lastScanTime && !syncing && (
+              <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-tighter hidden sm:inline-flex items-center gap-1.5 whitespace-nowrap">
+                <BarChart3 className="w-3.5 h-3.5" />
+                Last scan: {getCacheAge()}
+              </span>
+            )}
+            <button
+              onClick={syncSnapshot}
+              disabled={syncing || !userChannel}
+              className="h-9 px-4 rounded-full bg-white text-black text-sm font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">{syncing ? 'Syncing' : 'Sync'}</span>
+            </button>
+          </div>
         </div>
-      </header>
+      </nav>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-10 pb-24">
 
       {/* Main Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -311,7 +343,7 @@ export default function AnalyticsPage() {
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-8 bg-[#080808] border border-white/5 rounded-[2.5rem] p-8 min-h-[450px] flex flex-col relative overflow-hidden">
+        <div className="lg:col-span-8 bg-[#080808] border border-white/5 rounded-2xl p-8 min-h-[450px] flex flex-col relative overflow-hidden">
           {chartData.isPrediction && (
             <div className="absolute top-8 right-8 z-10 flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg backdrop-blur-md">
               <Sparkles className="w-3.5 h-3.5 text-geist-success" />
@@ -341,7 +373,7 @@ export default function AnalyticsPage() {
         </div>
 
         <div className="lg:col-span-4 flex flex-col gap-6">
-          <div className="flex-1 bg-white text-black rounded-[2.5rem] p-8 flex flex-col justify-between">
+          <div className="flex-1 bg-white text-black rounded-2xl p-8 flex flex-col justify-between">
             <div>
               <div className="w-12 h-12 bg-black/5 rounded-2xl flex items-center justify-center mb-6">
                 <Target className="w-6 h-6 text-black" />
@@ -372,7 +404,7 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          <div className="bg-[#111] border border-white/5 rounded-[2.5rem] p-8 flex items-center justify-between group cursor-pointer hover:border-white/20 transition-all">
+          <div className="bg-[#111] border border-white/5 rounded-2xl p-8 flex items-center justify-between group cursor-pointer hover:border-white/20 transition-all">
              <div>
                 <h4 className="text-[10px] font-black uppercase tracking-widest text-accents-4 mb-1">Channel Health</h4>
                 <p className="text-xl font-black uppercase tracking-tighter">Stable Growth</p>
@@ -429,7 +461,7 @@ function StatCard({ label, value, change, icon: Icon, subLabel }) {
   const isPositive = change >= 0;
   
   return (
-    <div className="bg-[#080808] border border-white/5 p-8 rounded-[2.5rem] hover:border-white/10 transition-all group">
+    <div className="bg-[#080808] border border-white/5 p-8 rounded-2xl hover:border-white/10 transition-all group">
       <div className="flex justify-between items-start mb-6">
         <div className="w-10 h-10 bg-white/5 rounded-2xl flex items-center justify-center group-hover:bg-white/10 transition-all">
           <Icon className="w-5 h-5 text-accents-3 group-hover:text-white" />
