@@ -75,58 +75,69 @@ export async function POST(req) {
     const subject = `Your Competitor Report: ${analysis.title}`;
     
     const html = `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #080808; color: white; padding: 40px; border-radius: 24px;">
-        <h1 style="font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: -1px; margin-bottom: 8px;">Competitor Report</h1>
-        <p style="color: #666; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 32px;">For ${analysis.subject_title || 'Your Channel'}</p>
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #000000; color: #ffffff; padding: 0; border-radius: 24px; overflow: hidden; border: 1px solid #333;">
+        <div style="background: linear-gradient(135deg, #00dfd8 0%, #0070f3 100%); padding: 40px 30px; text-align: center;">
+          <h1 style="font-size: 28px; font-weight: 900; text-transform: uppercase; letter-spacing: -1px; margin: 0; color: #000;">Competitor Report</h1>
+          <p style="color: rgba(0,0,0,0.6); font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; margin-bottom: 0;">For ${analysis.subject_title || 'Your Channel'}</p>
+        </div>
         
-        <div style="margin-bottom: 32px;">
-          <h2 style="font-size: 14px; font-weight: 900; text-transform: uppercase; color: #00dfd8; margin-bottom: 16px;">Rival Stats</h2>
+        <div style="padding: 30px;">
+          <h2 style="font-size: 16px; font-weight: 900; text-transform: uppercase; color: #00dfd8; margin-bottom: 20px; border-bottom: 1px solid #222; padding-bottom: 10px;">Market Rivals</h2>
+          
           ${validData.map(({ channel, videos }) => {
             const subCount = parseInt(channel.statistics.subscriberCount);
-            const totalViews = parseInt(channel.statistics.viewCount);
+            const viewCount = parseInt(channel.statistics.viewCount);
+            const videoCount = parseInt(channel.statistics.videoCount);
             
-            // Calculate avg views from recent videos if they have stats
-            // Search API might not return statistics, so we might need a fallback
-            // But usually we want to show something useful
-            const avgViews = videos.length > 0 ? "Active" : "Stable";
+            let badge = { label: 'Direct Peer', color: '#888', bg: 'rgba(255,255,255,0.05)' };
+            if (subCount > 1000000) badge = { label: 'Market Leader', color: '#ff0055', bg: 'rgba(255,0,85,0.1)' };
+            else if (subCount > 100000) badge = { label: 'Rising Star', color: '#00dfd8', bg: 'rgba(0,223,216,0.1)' };
 
             return `
-              <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 16px; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.05);">
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-                  <img src="${channel.snippet.thumbnails.default.url}" style="width: 40px; height: 40px; border-radius: 50%;" />
+              <div style="background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 20px; padding: 20px; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                  <img src="${channel.snippet.thumbnails.default.url}" style="width: 48px; height: 48px; border-radius: 50%; border: 2px solid #333;" />
+                  <div style="flex: 1;">
+                    <p style="font-weight: 900; margin: 0; font-size: 18px; color: #fff;">${channel.snippet.title}</p>
+                    <div style="display: inline-block; background: ${badge.bg}; color: ${badge.color}; padding: 3px 8px; border-radius: 6px; font-size: 9px; font-weight: 900; text-transform: uppercase; margin-top: 4px;">
+                      ${badge.label}
+                    </div>
+                  </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; background: rgba(255,255,255,0.02); border-radius: 12px; padding: 15px;">
                   <div>
-                    <p style="font-weight: 900; margin: 0; font-size: 16px;">${channel.snippet.title}</p>
-                    <p style="font-size: 11px; color: #666; margin: 0;">${subCount.toLocaleString()} Subs • ${totalViews.toLocaleString()} Total Views</p>
+                    <p style="font-size: 10px; color: #666; font-weight: bold; text-transform: uppercase; margin: 0 0 5px 0;">Subscribers</p>
+                    <p style="font-size: 16px; font-weight: 900; margin: 0; color: #fff;">${subCount.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p style="font-size: 10px; color: #666; font-weight: bold; text-transform: uppercase; margin: 0 0 5px 0;">Total Reach</p>
+                    <p style="font-size: 16px; font-weight: 900; margin: 0; color: #fff;">${viewCount.toLocaleString()}</p>
                   </div>
                 </div>
                 
-                <div style="display: flex; gap: 8px; margin-bottom: 16px;">
-                  <div style="background: rgba(0, 223, 216, 0.1); color: #00dfd8; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 900; text-transform: uppercase;">
-                    ${subCount > 1000000 ? 'Market Leader' : subCount > 100000 ? 'Rising Star' : 'Niche Peer'}
-                  </div>
-                  <div style="background: rgba(255, 0, 85, 0.1); color: #ff0055; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 900; text-transform: uppercase;">
-                    ${videos.length > 0 ? 'Recently Active' : 'Quiet'}
-                  </div>
-                </div>
-
-                <p style="font-size: 10px; font-weight: 900; text-transform: uppercase; color: #444; margin-bottom: 8px; letter-spacing: 1px;">Recent Wins</p>
-                ${videos.map(v => `
-                  <div style="font-size: 13px; color: #ccc; margin-bottom: 6px; padding-left: 8px; border-left: 2px solid #00dfd8;">
+                <p style="font-size: 10px; font-weight: 900; text-transform: uppercase; color: #444; margin-bottom: 12px; letter-spacing: 1px; border-left: 3px solid #00dfd8; padding-left: 10px;">Recent Breakthroughs</p>
+                ${videos.length > 0 ? videos.map(v => `
+                  <div style="font-size: 13px; color: #ccc; margin-bottom: 8px; line-height: 1.4; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px;">
                     ${v.snippet.title}
                   </div>
-                `).join('')}
+                `).join('') : '<p style="font-size: 12px; color: #444; font-style: italic;">No recent uploads found.</p>'}
               </div>
             `;
           }).join('')}
+
+          <div style="background: linear-gradient(135deg, rgba(255,0,85,0.1) 0%, rgba(0,112,243,0.1) 100%); padding: 30px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); margin-top: 40px;">
+            <h2 style="font-size: 14px; font-weight: 900; text-transform: uppercase; color: #ff0055; margin-bottom: 15px; margin-top: 0;">Strategic Plan</h2>
+            <p style="font-size: 14px; color: #aaa; line-height: 1.6; margin-bottom: 20px;">
+              Your rivals are currently dominating with the titles shown above. To gain an edge, we recommend focusing on <strong>higher-velocity content</strong> that targets their engagement gaps. Use their "Recent Wins" as a blueprint for your next upload.
+            </p>
+            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://updates.vyron.space'}/competitors?analysisId=${analysisId}" style="display: block; background: #ffffff; color: #000000; text-decoration: none; padding: 15px; border-radius: 12px; font-weight: 900; font-size: 13px; text-transform: uppercase; text-align: center; letter-spacing: 1px;">Open Full interactive Matrix</a>
+          </div>
         </div>
 
-        <div style="background: rgba(255,255,255,0.05); padding: 24px; border-radius: 16px;">
-          <h2 style="font-size: 14px; font-weight: 900; text-transform: uppercase; color: #ff0055; margin-bottom: 16px;">Your Next Steps</h2>
-          <p style="font-size: 14px; color: #ccc; line-height: 1.6;">These channels are growing by posting content that your audience already likes. To win, you should look at their titles and make something better. They are currently filling gaps that you can target today.</p>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://updates.vyron.space'}/competitors?analysisId=${analysisId}" style="display: inline-block; background: white; color: black; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 900; font-size: 12px; text-transform: uppercase; margin-top: 16px;">Open Full Matrix</a>
+        <div style="padding: 30px; border-top: 1px solid #1a1a1a; text-align: center; background: #050505;">
+          <p style="font-size: 11px; font-weight: bold; color: #444; margin: 0; text-transform: uppercase; letter-spacing: 2px;">Powered by Vyron Intelligence</p>
         </div>
-
-        <p style="font-size: 10px; color: #444; margin-top: 40px; text-align: center;">Sent by Vyron</p>
       </div>
     `;
 

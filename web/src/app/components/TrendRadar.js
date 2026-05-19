@@ -21,7 +21,8 @@ import {
   BarChart3, 
   Layers,
   ChevronRight,
-  Plus
+  Plus,
+  Mail
 } from 'lucide-react';
 import { useTitle } from '@/lib/hooks/titles';
 import ResearchNotesModal from './ResearchNotesModal';
@@ -39,6 +40,7 @@ export default function TrendRadar() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [lastScanTime, setLastScanTime] = useState(null);
+  const [lastEmailSentAt, setLastEmailSentAt] = useState(null);
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
   const [selectedNoteItem, setSelectedNoteItem] = useState(null);
 
@@ -50,10 +52,11 @@ export default function TrendRadar() {
     try {
       const cached = localStorage.getItem(getCacheKey());
       if (cached) {
-        const { data: cachedData, timestamp } = JSON.parse(cached);
+        const { data: cachedData, timestamp, lastEmailSentAt: cachedEmailTime } = JSON.parse(cached);
         if (Date.now() - timestamp < CACHE_DURATION) {
           setData(cachedData);
           setLastScanTime(timestamp);
+          setLastEmailSentAt(cachedEmailTime);
           return cachedData;
         }
         localStorage.removeItem(getCacheKey());
@@ -73,15 +76,17 @@ export default function TrendRadar() {
     }
   }, [selectedChannel?.id]);
 
-  const cacheData = (data) => {
+  const cacheData = (data, lastEmailTime) => {
     if (!selectedChannel) return;
     try {
       localStorage.setItem(getCacheKey(), JSON.stringify({
         data,
         timestamp: Date.now(),
-        channelId: selectedChannel.id
+        channelId: selectedChannel.id,
+        lastEmailSentAt: lastEmailTime || lastEmailSentAt
       }));
       setLastScanTime(Date.now());
+      if (lastEmailTime) setLastEmailSentAt(lastEmailTime);
     } catch (err) {
       console.error('Cache save error:', err);
     }
@@ -127,7 +132,7 @@ export default function TrendRadar() {
                 setCurrentStep(jsonData.message);
               } else if (jsonData.type === 'complete') {
                 setData(jsonData.data);
-                cacheData(jsonData.data);
+                cacheData(jsonData.data, jsonData.data.lastEmailSentAt);
                 setProgress(100);
               } else if (jsonData.type === 'error') {
                 setError(jsonData.message || jsonData.error);
@@ -178,6 +183,12 @@ export default function TrendRadar() {
           </div>
           
           <div className="flex items-center gap-4">
+            {lastEmailSentAt && !loading && (
+              <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-tighter hidden sm:inline-flex items-center gap-1.5 whitespace-nowrap">
+                <Mail className="w-3.5 h-3.5" />
+                Last Sent: {new Date(lastEmailSentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
             {lastScanTime && !loading && (
               <span className="text-xs text-zinc-500 hidden sm:inline flex items-center gap-1.5">
                 <BarChart3 className="w-3 h-3" />

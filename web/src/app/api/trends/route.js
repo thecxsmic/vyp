@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
+import { auth } from "@clerk/nextjs/server";
 import { generateObject } from "ai";
 import { groq } from "@ai-sdk/groq";
 import { z } from "zod";
 import { calculateViralityScore } from "@/lib/ranking/virality";
-import { getTrendRadar, saveTrendRadar } from "@/lib/cache/turso";
+import { getTrendRadar, saveTrendRadar, getLastEmail } from "@/lib/cache/turso";
 
 const trendSchema = z.object({
   summary: z.object({
@@ -50,6 +50,7 @@ const searchQueriesSchema = z.object({
 });
 
 export async function POST(req) {
+  const { userId } = await auth();
   const body = await req.json();
   const { channelId, channelTitle, channelBased } = body;
 
@@ -69,8 +70,22 @@ export async function POST(req) {
             const oneDay = 24 * 60 * 60;
             if (now - cachedRadar.last_updated < oneDay) {
               console.log(`[Trends API] Using fresh backend cache for ${channelId}`);
+              
+              // Get last email time
+              const lastEmail = await getLastEmail(userId, 'trend_radar', channelId);
+              
+              // Trigger email report in background if not sent in last 24h
+              const origin = req.headers.get('origin') || req.nextUrl.origin;
+              fetch(`${origin}/api/trends/email`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ channelId })
+              }).catch(err => {
+                console.error("[Trends API] Error triggering cached email:", err);
+              });
+
               send({ type: 'step', progress: 100, message: 'Loading current radar...' });
-              send({ type: 'complete', data: cachedRadar.data });
+              send({ type: 'complete', data: { ...cachedRadar.data, lastEmailSentAt: lastEmail } });
               controller.close();
               return;
             }
@@ -315,6 +330,16 @@ INSTRUCTIONS:
         if (channelBased && channelId) {
           saveTrendRadar(channelId, object).catch(err => {
             console.error("[Trends API] Error saving to Turso:", err);
+          });
+
+          // Trigger email report in background
+          const origin = req.headers.get('origin') || req.nextUrl.origin;
+          fetch(`${origin}/api/trends/email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ channelId })
+          }).catch(err => {
+            console.error("[Trends API] Error triggering email:", err);
           });
         }
 
