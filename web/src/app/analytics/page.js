@@ -45,6 +45,13 @@ ChartJS.register(
   Legend
 );
 
+const formatNumber = (num) => {
+  const n = parseInt(num || 0);
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+  return n.toLocaleString();
+};
+
 const commonOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -71,7 +78,7 @@ const commonOptions = {
       ticks: { 
         color: '#444', 
         font: { size: 9, weight: 'bold' }, 
-        callback: (value) => value >= 1000000 ? (value/1000000).toFixed(1) + 'M' : value >= 1000 ? (value/1000).toFixed(1) + 'K' : value 
+        callback: (value) => formatNumber(value)
       }
     }
   }
@@ -139,13 +146,6 @@ export default function AnalyticsPage() {
   useEffect(() => {
     fetchData();
   }, []);
-
-  const formatNumber = (num) => {
-    const n = parseInt(num || 0);
-    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
-    if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
-    return n.toLocaleString();
-  };
 
   // Metrics Calculations
   const metrics = useMemo(() => {
@@ -282,13 +282,7 @@ export default function AnalyticsPage() {
         </div>
         
         <div className="flex items-center gap-4">
-          <div className="text-right hidden sm:block">
-            <p className="text-[10px] font-black uppercase tracking-widest text-accents-3">Last Synced</p>
-            <p className="text-xs font-bold text-white">
-              {data.snapshots.length > 0 ? new Date(data.snapshots[data.snapshots.length-1].timestamp).toLocaleString() : 'Never'}
-            </p>
-          </div>
-          <button 
+          <button
             onClick={syncSnapshot}
             disabled={syncing}
             className="bg-white text-black px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-accents-1 transition-all flex items-center gap-2 disabled:opacity-50"
@@ -296,8 +290,7 @@ export default function AnalyticsPage() {
             <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
             {syncing ? 'Syncing...' : 'Sync Now'}
           </button>
-        </div>
-      </header>
+        </div>      </header>
 
       {/* Main Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
