@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useChannel } from '@/contexts/channel';
 import { useUser } from '@/contexts/user';
@@ -42,6 +42,7 @@ const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 export default function CompetitorsPage() {
   useTitle("Competitor Matrix");
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { channels } = useChannel();
   const { user } = useUser();
   const [loading, setLoading] = useState(false);
@@ -50,40 +51,13 @@ export default function CompetitorsPage() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [lastScanTime, setLastScanTime] = useState(null);
+  const [lastEmailSentAt, setLastEmailSentAt] = useState(null);
   const [activeTab, setActiveTab] = useState('market');
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
   const [selectedNoteItem, setSelectedNoteItem] = useState(null);
-  const [sendingEmail, setSendingEmail] = useState(false);
 
   const selectedChannel = channels.data.find(c => c.id === channels.selectedId);
   const getCacheKey = () => `${CACHE_KEY_PREFIX}${selectedChannel?.id || 'default'}`;
-
-  const sendEmailReport = async () => {
-    const analysisId = searchParams.get('analysisId');
-    if (!analysisId) {
-      alert("Please save this analysis first to send it via email.");
-      return;
-    }
-
-    setSendingEmail(true);
-    try {
-      const res = await fetch('/api/competitors/email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ analysisId })
-      });
-      const result = await res.json();
-      if (result.success) {
-        alert("Success! The competitor analysis report has been sent to your email.");
-      } else {
-        throw new Error(result.error || "Failed to send email");
-      }
-    } catch (err) {
-      alert("Error: " + err.message);
-    } finally {
-      setSendingEmail(false);
-    }
-  };
 
   const loadAnalysisById = useCallback(async (id) => {
     setLoading(true);
@@ -95,10 +69,11 @@ export default function CompetitorsPage() {
       const result = await res.json();
       
       if (!result.success || !result.item) {
-        throw new Error(`Analysis snapshot "${id}" not found. This might be an older research note that hasn't been synced to the new database format.`);
+        throw new Error(`Analysis snapshot "${id}" not found.`);
       }
       
       const analysis = result.item;
+      setLastEmailSentAt(analysis.lastEmailSentAt);
       setProgress(40);
       setCurrentStep('Fetching latest channel data...');
       
@@ -263,6 +238,43 @@ export default function CompetitorsPage() {
 
       setData(analysisResult);
       cacheData(analysisResult);
+      
+      // Auto-save to Turso to get an ID for emailing
+      try {
+        const saveRes = await fetch('/api/competitors/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subjectId: baseChannel.id,
+            competitorIds: competitors.map(c => c.id),
+            title: `Matrix: ${baseChannel.title}`
+          })
+        });
+        const saveResult = await saveRes.json();
+        if (saveResult.success && saveResult.id) {
+          router.push(`/competitors?analysisId=${saveResult.id}`);
+          
+          // Automatically trigger the email report
+          setCurrentStep('Sending email report...');
+          try {
+            const emailRes = await fetch('/api/competitors/email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ analysisId: saveResult.id })
+            });
+            const emailResult = await emailRes.json();
+            if (emailResult.success) {
+              setLastEmailSentAt(Date.now());
+              console.log("Email report sent automatically");
+            }
+          } catch (e) {
+            console.error("Automatic email failed:", e);
+          }
+        }
+      } catch (e) {
+        console.error("Auto-save failed:", e);
+      }
+
       setProgress(100);
     } catch (err) {
       setError(err.message);
@@ -329,16 +341,11 @@ export default function CompetitorsPage() {
           </div>
           
           <div className="flex items-center gap-4">
-            {searchParams.get('analysisId') && data && !loading && (
-              <button
-                onClick={sendEmailReport}
-                disabled={sendingEmail}
-                className="h-9 px-4 rounded-full bg-zinc-900 border border-zinc-800 text-white text-sm font-medium hover:bg-zinc-800 transition-colors flex items-center gap-2"
-                title="Email Report"
-              >
-                {sendingEmail ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
-                <span className="hidden sm:inline">Email Report</span>
-              </button>
+            {searchParams.get('analysisId') && data && !loading && lastEmailSentAt && (
+              <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-tighter hidden sm:inline-flex items-center gap-1.5 whitespace-nowrap">
+                <Mail className="w-3 h-3" />
+                Last Sent: {new Date(lastEmailSentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
             )}
             {lastScanTime && !loading && (
               <span className="text-xs text-zinc-500 hidden sm:inline-flex items-center gap-1.5 whitespace-nowrap">

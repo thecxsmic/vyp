@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { saveAnalysis, getSavedAnalyses, getAnalysisById, getUserChannel } from "@/lib/cache/turso";
+import { saveAnalysis, getSavedAnalyses, getAnalysisById, getUserChannel, getLastEmail } from "@/lib/cache/turso";
 import { apiSuccess, apiError } from "@/lib/utils/response";
 
 export async function GET(req) {
@@ -12,6 +12,10 @@ export async function GET(req) {
 
     if (id) {
       const analysis = await getAnalysisById(userId, id);
+      if (analysis) {
+        const lastEmail = await getLastEmail(userId, 'competitor_analysis', id);
+        analysis.lastEmailSentAt = lastEmail;
+      }
       return apiSuccess({ item: analysis });
     }
 
