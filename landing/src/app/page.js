@@ -1,1048 +1,1197 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { 
+  Zap, Target, TrendingUp, Search, Cpu, ArrowRight, Check, Play, Sparkles, 
+  Clock, Star, ArrowUpRight, HelpCircle, ChevronDown, Monitor, 
+  BarChart3, Users, BookOpen, RefreshCw, Terminal, Eye, AlertCircle,
+  Menu, X
+} from 'lucide-react';
 import DemoDashboard from '../components/DemoDashboard';
 
 export default function LandingPage() {
+  // Navigation scroll state
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // Custom cursor states
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [ringPos, setRingPos] = useState({ x: 0, y: 0 });
+  const [isHovering, setIsHovering] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+
+  
+  // Pricing counter states (animated)
+  const [priceDisplay, setPriceDisplay] = useState(499);
+  
+  // FAQ state
+  const [openFaq, setOpenFaq] = useState(null);
+
+  // Terminal scanner states
+  const [terminalNiche, setTerminalNiche] = useState('SaaS & Tech');
+  const [terminalLogs, setTerminalLogs] = useState([]);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanResultReady, setScanResultReady] = useState(false);
+  const [scanResultData, setScanResultData] = useState(null);
+  
+  // Countdown Timer states
+  const [timeLeft, setTimeLeft] = useState({ hours: 23, minutes: 47, seconds: 12 });
+
+  // Refs for tilt card
+  const heroCardRef = useRef(null);
+  const [cardTransform, setCardTransform] = useState('');
+  
+  // Ref for canvas particle background
+  const canvasRef = useRef(null);
+
+  // Detect mobile
   useEffect(() => {
-    /* ── CURSOR ── */
-    const cur = document.getElementById('cur');
-    const ring = document.getElementById('cur-ring');
-    let mx=0,my=0,rx=0,ry=0;
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Custom cursor handler
+  useEffect(() => {
+    if (isMobile) return;
     
-    const mouseMoveHandler = e=>{
-      mx=e.clientX;my=e.clientY;
-      if(cur) { cur.style.left=mx+'px';cur.style.top=my+'px'; }
+    const onMouseMove = (e) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
     };
-    document.addEventListener('mousemove', mouseMoveHandler);
-    
-    let animId;
-    (function animR(){
-      rx+=(mx-rx)*.11; ry+=(my-ry)*.11;
-      if(ring) { ring.style.left=rx+'px';ring.style.top=ry+'px'; }
-      animId = requestAnimationFrame(animR);
-    })();
-    
-    const interactables = document.querySelectorAll('button,a,.feat-card,.step,.stat-box,.trend-item');
-    const mouseEnter = () => document.body.classList.add('cursor-hover');
-    const mouseLeave = () => document.body.classList.remove('cursor-hover');
-    interactables.forEach(el=>{
-      el.addEventListener('mouseenter', mouseEnter);
-      el.addEventListener('mouseleave', mouseLeave);
-    });
+    window.addEventListener('mousemove', onMouseMove);
 
-    /* ── NAV ── */
-    const nav=document.getElementById('nav');
-    const scrollHandler = ()=>{
-      if(nav) nav.classList.toggle('scrolled',window.scrollY>50);
+    // Add hover states to interactables
+    const addHoverListeners = () => {
+      const elements = document.querySelectorAll('button, a, .interactive-card, [role="button"]');
+      elements.forEach(el => {
+        el.addEventListener('mouseenter', () => setIsHovering(true));
+        el.addEventListener('mouseleave', () => setIsHovering(false));
+      });
     };
-    window.addEventListener('scroll', scrollHandler);
 
-    /* ── PARTICLES ── */
-    let resizeHandler, drawId;
-    const canvas=document.getElementById('bg-canvas');
-    if (canvas) {
-      const ctx=canvas.getContext('2d');
-      let W,H,pts=[];
-      resizeHandler = ()=>{W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;};
-      resizeHandler();
-      window.addEventListener('resize',resizeHandler);
-
-      function mkPt(){
-        return{
-          x:Math.random()*W,y:Math.random()*H,
-          vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,
-          r:Math.random()*1.2+.3,
-          o:Math.random()*.4+.05,
-          c:Math.random()<.7?'200,241,53':'61,255,192'
-        };
-      }
-      for(let i=0;i<90;i++) pts.push(mkPt());
-
-      function drawPts(){
-        ctx.clearRect(0,0,W,H);
-        pts.forEach(p=>{
-          p.x+=p.vx;p.y+=p.vy;
-          if(p.x<0)p.x=W;if(p.x>W)p.x=0;
-          if(p.y<0)p.y=H;if(p.y>H)p.y=0;
-          ctx.beginPath();
-          ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-          ctx.fillStyle=`rgba(${p.c},${p.o})`;
-          ctx.fill();
-        });
-        // draw connections
-        for(let i=0;i<pts.length;i++){
-          for(let j=i+1;j<pts.length;j++){
-            const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y;
-            const d=Math.sqrt(dx*dx+dy*dy);
-            if(d<120){
-              ctx.beginPath();
-              ctx.moveTo(pts[i].x,pts[i].y);
-              ctx.lineTo(pts[j].x,pts[j].y);
-              ctx.strokeStyle=`rgba(200,241,53,${(.08*(1-d/120))})`;
-              ctx.lineWidth=.5;
-              ctx.stroke();
-            }
-          }
-        }
-        drawId = requestAnimationFrame(drawPts);
-      }
-      drawPts();
-    }
-
-    /* ── BUILD CHART ── */
-    const chartEl=document.getElementById('chart');
-    if (chartEl && chartEl.children.length === 0) {
-      const heights=[32,44,38,55,50,68,63,78,88,72,85,95];
-      heights.forEach((h,i)=>{
-        const b=document.createElement('div');
-        b.className='bar';
-        b.style.height=h+'%';
-        b.style.animationDelay=(i*.06+1.1)+'s';
-        chartEl.appendChild(b);
-      });
-    }
-
-    /* ── SCROLL REVEAL ── */
-    const obs=new IntersectionObserver(entries=>{
-      entries.forEach(e=>{
-        if(e.isIntersecting){e.target.classList.add('vis');obs.unobserve(e.target);}
-      });
-    },{threshold:.1});
-    document.querySelectorAll('.sr').forEach(el=>obs.observe(el));
-
-    /* ── STEPS & TERMINAL REVEAL ── */
-    const stepObs=new IntersectionObserver(entries=>{
-      entries.forEach(e=>{
-        if(e.isIntersecting){
-          const steps=e.target.querySelectorAll('.step');
-          steps.forEach((s,i)=>{setTimeout(()=>s.classList.add('visible'),i*150);});
-          obs.unobserve(e.target);
-        }
-      });
-    },{threshold:.1});
-    const stepsEl=document.getElementById('steps');
-    if(stepsEl)stepObs.observe(stepsEl);
-
-    const termObs=new IntersectionObserver(entries=>{
-      entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');}});
-    },{threshold:.1});
-    const termEl=document.getElementById('term');
-    if(termEl)termObs.observe(termEl);
-
-    /* ── FEAT LIST REVEAL ── */
-    const featObs=new IntersectionObserver(entries=>{
-      entries.forEach(e=>{
-        if(e.isIntersecting){
-          const items=e.target.querySelectorAll('.feat-item');
-          items.forEach((it,i)=>{setTimeout(()=>it.classList.add('visible'),i*80);});
-        }
-      });
-    },{threshold:.1});
-    const featListEl=document.getElementById('featList');
-    if(featListEl)featObs.observe(featListEl);
-
-    /* ── COUNTDOWN TIMER ── */
-    const endTime=new Date();
-    endTime.setHours(endTime.getHours()+23,endTime.getMinutes()+47,endTime.getSeconds()+12);
-    let timerInterval;
-    function updateTimer(){
-      const now=new Date();
-      let diff=Math.max(0,endTime-now);
-      const h=Math.floor(diff/3600000);diff%=3600000;
-      const m=Math.floor(diff/60000);diff%=60000;
-      const s=Math.floor(diff/1000);
-      const th = document.getElementById('th');
-      const tm = document.getElementById('tm');
-      const ts = document.getElementById('ts');
-      if(th) th.textContent=String(h).padStart(2,'0');
-      if(tm) tm.textContent=String(m).padStart(2,'0');
-      if(ts) ts.textContent=String(s).padStart(2,'0');
-    }
-    updateTimer();timerInterval = setInterval(updateTimer,1000);
-
-    /* ── PRICE COUNTER ANIMATION ── */
-    let priceAnimId;
-    function animateCounter(el,from,to,duration){
-      const start=performance.now();
-      function update(now){
-        const t=Math.min(1,(now-start)/duration);
-        const ease=1-Math.pow(1-t,3);
-        if(el) el.textContent=Math.round(from+(to-from)*ease);
-        if(t<1) priceAnimId = requestAnimationFrame(update);
-      }
-      priceAnimId = requestAnimationFrame(update);
-    }
-    const priceObs=new IntersectionObserver(entries=>{
-      entries.forEach(e=>{
-        if(e.isIntersecting){
-          animateCounter(document.getElementById('priceNum'),999,499,1200);
-          priceObs.unobserve(e.target);
-        }
-      });
-    },{threshold:.5});
-    const priceEl=document.getElementById('priceNum');
-    if(priceEl)priceObs.observe(priceEl);
-
-    /* ── TILT on holo card ── */
-    const holoCard=document.querySelector('.holo-card');
-    const mouseMoveHolo = e=>{
-      const r=holoCard.getBoundingClientRect();
-      const cx=r.left+r.width/2,cy=r.top+r.height/2;
-      const rx2=((e.clientY-cy)/r.height)*8;
-      const ry2=((e.clientX-cx)/r.width)*-8;
-      holoCard.style.transform=`perspective(800px) rotateX(${rx2}deg) rotateY(${ry2}deg)`;
-    };
-    const mouseLeaveHolo = ()=>{
-      holoCard.style.transform='perspective(800px) rotateX(0) rotateY(0)';
-    };
-    if(holoCard){
-      holoCard.addEventListener('mousemove', mouseMoveHolo);
-      holoCard.addEventListener('mouseleave', mouseLeaveHolo);
-    }
-
-    /* ── STAT COUNTER ANIMATION ── */
-    const statObs=new IntersectionObserver(entries=>{
-      entries.forEach(e=>{
-        if(e.isIntersecting){
-          document.querySelectorAll('.stat-val').forEach(el=>{
-            el.style.animation='none';
-            el.style.opacity='0';
-            setTimeout(()=>{
-              el.style.transition='opacity .5s ease';
-              el.style.opacity='1';
-            },300+Math.random()*400);
-          });
-          statObs.unobserve(e.target);
-        }
-      });
-    },{threshold:.5});
-    const statsEl=document.querySelector('.stats-row');
-    if(statsEl)statObs.observe(statsEl);
+    addHoverListeners();
+    // Re-apply listeners if DOM updates
+    const observer = new MutationObserver(addHoverListeners);
+    observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
-      document.removeEventListener('mousemove', mouseMoveHandler);
-      cancelAnimationFrame(animId);
-      interactables.forEach(el=>{
-        el.removeEventListener('mouseenter', mouseEnter);
-        el.removeEventListener('mouseleave', mouseLeave);
+      window.removeEventListener('mousemove', onMouseMove);
+      observer.disconnect();
+    };
+  }, [isMobile]);
+
+  // Smooth ring follow effect
+  useEffect(() => {
+    if (isMobile) return;
+    let animId;
+    const followMouse = () => {
+      setRingPos(prev => {
+        const dx = mousePos.x - prev.x;
+        const dy = mousePos.y - prev.y;
+        return {
+          x: prev.x + dx * 0.12,
+          y: prev.y + dy * 0.12
+        };
       });
-      window.removeEventListener('scroll', scrollHandler);
-      if (resizeHandler) window.removeEventListener('resize', resizeHandler);
-      cancelAnimationFrame(drawId);
-      obs.disconnect();
-      stepObs.disconnect();
-      termObs.disconnect();
-      featObs.disconnect();
-      clearInterval(timerInterval);
-      cancelAnimationFrame(priceAnimId);
-      priceObs.disconnect();
-      if(holoCard){
-        holoCard.removeEventListener('mousemove', mouseMoveHolo);
-        holoCard.removeEventListener('mouseleave', mouseLeaveHolo);
+      animId = requestAnimationFrame(followMouse);
+    };
+    animId = requestAnimationFrame(followMouse);
+    return () => cancelAnimationFrame(animId);
+  }, [mousePos, isMobile]);
+
+  // Navigation scroll listener
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 40);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Countdown timer handler
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev.seconds > 0) {
+          return { ...prev, seconds: prev.seconds - 1 };
+        } else if (prev.minutes > 0) {
+          return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
+        } else if (prev.hours > 0) {
+          return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
+        } else {
+          // Reset countdown to preserve UI action
+          return { hours: 23, minutes: 59, seconds: 59 };
+        }
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Animate pricing on mount
+  useEffect(() => {
+    let startTime = null;
+    const duration = 1200; // ms
+    const startPrice = 199;
+    const targetPrice = 499;
+    
+    const animate = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(startPrice + (targetPrice - startPrice) * ease);
+      setPriceDisplay(current);
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate);
       }
-      statObs.disconnect();
+    };
+    
+    requestAnimationFrame(animate);
+  }, []);
+
+  // Canvas particle background
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let W, H;
+    let particles = [];
+    
+    const initCanvas = () => {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+      particles = [];
+      const particleCount = Math.min(Math.floor(W / 15), 80);
+      
+      for (let i = 0; i < particleCount; i++) {
+        particles.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          vx: (Math.random() - 0.5) * 0.3,
+          vy: (Math.random() - 0.5) * 0.3,
+          r: Math.random() * 1.5 + 0.5,
+          color: Math.random() < 0.7 ? '200, 241, 53' : '61, 255, 192', // Volt or Mint
+          alpha: Math.random() * 0.2 + 0.05
+        });
+      }
+    };
+
+    initCanvas();
+    window.addEventListener('resize', initCanvas);
+
+    let animId;
+    const draw = () => {
+      ctx.clearRect(0, 0, W, H);
+      
+      // Update & Draw particles
+      particles.forEach((p, idx) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        
+        if (p.x < 0) p.x = W;
+        if (p.x > W) p.x = 0;
+        if (p.y < 0) p.y = H;
+        if (p.y > H) p.y = 0;
+        
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${p.color}, ${p.alpha})`;
+        ctx.fill();
+        
+        // Connections
+        for (let j = idx + 1; j < particles.length; j++) {
+          const p2 = particles[j];
+          const dx = p.x - p2.x;
+          const dy = p.y - p2.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          
+          if (dist < 130) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            const connectionAlpha = 0.08 * (1 - dist / 130);
+            ctx.strokeStyle = `rgba(200, 241, 53, ${connectionAlpha})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      });
+      
+      animId = requestAnimationFrame(draw);
+    };
+    
+    draw();
+    return () => {
+      window.removeEventListener('resize', initCanvas);
+      cancelAnimationFrame(animId);
     };
   }, []);
 
+  // Card 3D tilt effect handler
+  const handleCardMouseMove = (e) => {
+    const card = heroCardRef.current;
+    if (!card) return;
+    
+    const rect = card.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    
+    const px = (e.clientX - cx) / (rect.width / 2); // -1 to 1
+    const py = (e.clientY - cy) / (rect.height / 2); // -1 to 1
+    
+    const rotateX = py * -10; // degrees max
+    const rotateY = px * 10;
+    
+    setCardTransform(`perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`);
+  };
+
+  const handleCardMouseLeave = () => {
+    setCardTransform('perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)');
+  };
+
+  // Niche Scanner simulator calling backend API
+  const runNicheScanner = () => {
+    if (isScanning) return;
+    
+    setIsScanning(true);
+    setScanResultReady(false);
+    setTerminalLogs([]);
+    
+    const rawLogs = [
+      { msg: `Initializing scan parameters for niche: "${terminalNiche}"...`, delay: 100 },
+      { msg: "Connecting to global YouTube API node cluster...", delay: 600 },
+      { msg: "Scraping competitor channels within database segment [v3.0.4]...", delay: 1100 },
+      { msg: "Analyzing Content DNA and calculating subscriber growth vectors...", delay: 1700 },
+      { msg: "Parsing vector database (Zilliz/Milvus) for semantic matching...", delay: 2400 },
+      { msg: "Applying AI virality ranking algorithm (@/lib/ranking/virality)...", delay: 3100 },
+      { msg: "Finalizing content blueprints and growth vectors...", delay: 3800 }
+    ];
+    
+    rawLogs.forEach((log) => {
+      setTimeout(() => {
+        setTerminalLogs(prev => [...prev, log.msg]);
+      }, log.delay);
+    });
+
+    // Call REST API
+    fetch(`/api/trends?niche=${encodeURIComponent(terminalNiche)}`)
+      .then(res => res.json())
+      .then(data => {
+        setTimeout(() => {
+          setIsScanning(false);
+          setScanResultReady(true);
+          
+          // Format API response into UI data shape
+          const trends = data.insights.emergingTrends.map(item => ({
+            topic: item.topic,
+            score: item.viralScore,
+            estViews: item.estimatedViews,
+            difficulty: item.difficulty
+          }));
+          const wins = data.insights.quickWins.map(item => ({
+            title: item.idea,
+            why: item.why,
+            effort: item.effort
+          }));
+          
+          setScanResultData({ trends, wins });
+        }, 4300);
+      })
+      .catch(err => {
+        console.error("Scraper API Error", err);
+        setTimeout(() => {
+          setIsScanning(false);
+          setTerminalLogs(prev => [
+            ...prev, 
+            "[ERROR] Scraping pipeline failed to reach backend API node cluster."
+          ]);
+        }, 4300);
+      });
+  };
+
+  // Pre-load default terminal log on mount
+  useEffect(() => {
+    setTerminalLogs([
+      "System idle. Select niche and click 'Scan Niche' to initiate scraping pipeline...",
+      "Ready to scrape video benchmarks, tags, and psychological hooks."
+    ]);
+  }, []);
+
   return (
-    <>
-      <style jsx global>{`
-        :root {
-          --bg: #030407;
-          --surface: #080a10;
-          --border: rgba(255,255,255,0.06);
-          --border2: rgba(200,241,53,0.15);
-          --accent: #c8f135;
-          --accent2: #3dffc0;
-          --accent3: #ff4f6d;
-          --accent4: #6c63ff;
-          --text: #e8ecf0;
-          --muted: #4a5060;
-          --card: #0c0e16;
-          --glow: rgba(200,241,53,0.12);
-        }
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html { scroll-behavior: smooth; }
-        body {
-          background: var(--bg);
-          color: var(--text);
-          font-family: 'DM Mono', monospace;
-          overflow-x: hidden;
-          cursor: none;
-        }
+    <div className="relative min-h-screen w-full overflow-x-hidden">
+      {/* Custom Pointer following ring (hidden on mobile) */}
+      {!isMobile && (
+        <>
+          <div 
+            className="fixed w-3 h-3 bg-brand-volt rounded-full pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2 transition-transform duration-100 ease-out mix-blend-difference"
+            style={{ left: `${mousePos.x}px`, top: `${mousePos.y}px`, transform: `translate(-50%, -50%) scale(${isHovering ? 1.8 : 1})` }}
+          />
+          <div 
+            className="fixed w-10 h-10 border border-brand-volt/40 rounded-full pointer-events-none z-[9998] -translate-x-1/2 -translate-y-1/2 transition-transform duration-300 ease-out"
+            style={{ 
+              left: `${ringPos.x}px`, 
+              top: `${ringPos.y}px`, 
+              transform: `translate(-50%, -50%) scale(${isHovering ? 1.5 : 1})`,
+              borderColor: isHovering ? 'rgba(200, 241, 53, 0.7)' : 'rgba(200, 241, 53, 0.3)'
+            }}
+          />
+        </>
+      )}
 
-        /* ── CURSOR ── */
-        #cur { position:fixed;width:10px;height:10px;background:var(--accent);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .15s,height .15s,background .2s;mix-blend-mode:difference; }
-        #cur-ring { position:fixed;width:40px;height:40px;border:1.5px solid rgba(200,241,53,.35);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .3s,height .3s,border-color .3s; }
-        body.cursor-hover #cur { width:18px;height:18px; }
-        body.cursor-hover #cur-ring { width:64px;height:64px;border-color:rgba(200,241,53,.5); }
+      {/* Floating blur orbs - Visual background accent */}
+      <div className="absolute top-[10%] right-[10%] w-96 h-96 bg-brand-volt/5 rounded-full filter blur-[100px] pointer-events-none animate-pulse-slow z-0" />
+      <div className="absolute top-[40%] left-[5%] w-[450px] h-[450px] bg-brand-mint/4 rounded-full filter blur-[120px] pointer-events-none animate-spin-slow z-0" />
+      <div className="absolute bottom-[15%] right-[5%] w-[350px] h-[350px] bg-brand-rose/4 rounded-full filter blur-[90px] pointer-events-none animate-pulse-slow z-0" />
 
-        /* ── CANVAS ── */
-        #bg-canvas { position:fixed;inset:0;z-index:0;pointer-events:none; }
+      {/* Dynamic particles and tech Grid overlay */}
+      <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0 opacity-70" />
+      <div className="fixed inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:4.5rem_4.5rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none z-0" />
+      
+      {/* Background grain texture */}
+      <div className="bg-grain" />
 
-        /* ── GRAIN ── */
-        body::after {
-          content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
-          background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-          opacity:.4;
-        }
+      {/* ── HEADER (GLASSMORPHIC FLOATING ISLAND) ── */}
+      <header className="fixed top-0 left-0 right-0 w-full max-w-[100vw] z-50 px-3 sm:px-4 md:px-8 py-4 transition-all duration-300">
+        <div className={`max-w-5xl w-full mx-auto px-4 sm:px-6 py-3 flex flex-col lg:flex-row lg:items-center justify-between gap-0 lg:gap-4 rounded-2xl bg-black/85 border ${scrolled ? 'border-brand-volt/20 shadow-[0_8px_32px_rgba(200,241,53,0.05)]' : 'border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.8)]'} backdrop-blur-md transition-[border-color,background-color,box-shadow] duration-200`}>
+          <div className="flex items-center justify-between w-full lg:w-auto py-1">
+            {/* Logo */}
+            <a href="#" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 group">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-brand-volt via-[#dff453] to-brand-mint p-[1.5px] shadow-[0_0_15px_rgba(200,241,53,0.2)] group-hover:shadow-[0_0_25px_rgba(200,241,53,0.4)] transition-all">
+                <div className="w-full h-full bg-black rounded-[6px] flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-brand-volt group-hover:rotate-12 transition-transform duration-300" />
+                </div>
+              </div>
+              <span className="font-display font-extrabold text-lg text-white tracking-tight">VYRON</span>
+            </a>
 
-        /* ── NAV ── */
-        nav {
-          position:fixed;top:0;left:0;right:0;z-index:100;
-          display:flex;align-items:center;justify-content:space-between;
-          padding:22px 52px;
-          transition:background .4s,backdrop-filter .4s;
-        }
-        nav.scrolled { background:rgba(3,4,7,.88);backdrop-filter:blur(24px); }
+            {/* Hamburger menu button for mobile */}
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden flex items-center justify-center p-2 rounded-full border border-zinc-800 text-zinc-400 hover:text-white bg-zinc-950/40 hover:bg-zinc-900 transition-all cursor-pointer focus:outline-none"
+            >
+              {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            </button>
+          </div>
 
-        .logo {
-          font-family:'Syne',sans-serif;font-weight:800;font-size:1.15rem;
-          letter-spacing:-.03em;color:#fff;display:flex;align-items:center;gap:10px;
-          opacity:0;animation:fadeDown .7s .1s ease forwards;
-        }
-        .logo-pulse {
-          width:9px;height:9px;background:var(--accent);border-radius:50%;
-          box-shadow:0 0 0 0 rgba(200,241,53,.6);
-          animation:logoPulse 2s ease infinite;
-        }
-        @keyframes logoPulse {
-          0%{box-shadow:0 0 0 0 rgba(200,241,53,.6)}
-          70%{box-shadow:0 0 0 10px rgba(200,241,53,0)}
-          100%{box-shadow:0 0 0 0 rgba(200,241,53,0)}
-        }
+          {/* Links */}
+          <nav className={`${mobileMenuOpen ? 'flex' : 'hidden'} lg:flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-8 text-[11px] font-bold uppercase tracking-wider text-zinc-400 w-full lg:w-auto pt-4 pb-2 lg:py-0 border-t border-zinc-900 lg:border-t-0`}>
+            <a href="#features" onClick={() => setMobileMenuOpen(false)} className="hover:text-white transition-colors relative group py-1 w-full lg:w-auto">
+              Features
+              <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-brand-volt transition-all group-hover:w-full hidden lg:block" />
+            </a>
+            <a href="#demo" onClick={() => setMobileMenuOpen(false)} className="hover:text-white transition-colors relative group py-1 w-full lg:w-auto">
+              Live Demo
+              <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-brand-volt transition-all group-hover:w-full hidden lg:block" />
+            </a>
+            <a href="#scanner" onClick={() => setMobileMenuOpen(false)} className="hover:text-white transition-colors relative group py-1 w-full lg:w-auto">
+              Radar Terminal
+              <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-brand-volt transition-all group-hover:w-full hidden lg:block" />
+            </a>
+            <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="hover:text-white transition-colors relative group py-1 w-full lg:w-auto">
+              Pricing
+              <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-brand-volt transition-all group-hover:w-full hidden lg:block" />
+            </a>
+          </nav>
 
-        .nav-links { display:flex;gap:32px;list-style:none;opacity:0;animation:fadeDown .7s .2s ease forwards; }
-        .nav-links a { color:var(--muted);text-decoration:none;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;transition:color .2s;position:relative; }
-        .nav-links a::after { content:'';position:absolute;bottom:-4px;left:0;width:0;height:1px;background:var(--accent);transition:width .3s; }
-        .nav-links a:hover { color:var(--text); }
-        .nav-links a:hover::after { width:100%; }
+          {/* Action Button */}
+          <div className={`${mobileMenuOpen ? 'block' : 'hidden'} lg:block w-full lg:w-auto pt-2 pb-1 lg:py-0`}>
+            <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="relative inline-flex items-center justify-center p-0.5 overflow-hidden text-[11px] font-bold uppercase tracking-wider text-black rounded-full group bg-gradient-to-br from-brand-volt to-brand-mint group-hover:from-brand-volt group-hover:to-brand-mint hover:text-black dark:text-white focus:ring-4 focus:outline-none focus:ring-lime-800 transition-all duration-300 w-full lg:w-auto">
+              <span className="relative px-5 py-2 transition-all ease-in duration-75 bg-brand-volt rounded-full group-hover:bg-opacity-0 group-hover:text-white text-black font-extrabold flex items-center justify-center gap-1.5 w-full lg:w-auto">
+                Start Trial <ArrowRight className="w-3.5 h-3.5" />
+              </span>
+            </a>
+          </div>
+        </div>
+      </header>
 
-        .nav-cta {
-          background:var(--accent);color:#050607;border:none;
-          padding:11px 24px;font-family:'Syne',sans-serif;font-size:.78rem;font-weight:800;
-          letter-spacing:.04em;cursor:none;position:relative;overflow:hidden;
-          opacity:0;animation:fadeDown .7s .3s ease forwards;
-          clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%);
-        }
-        .nav-cta::before { content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);transition:left .5s; }
-        .nav-cta:hover::before { left:100%; }
-        .nav-cta:hover { box-shadow:0 0 30px rgba(200,241,53,.4); }
+      {/* ── HERO SECTION ── */}
+      <section className="relative z-10 pt-32 pb-24 md:pt-40 md:pb-36 px-4 md:px-8 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-6 lg:gap-8 items-center">
+        {/* Hero Info */}
+        <div className="md:col-span-6 lg:col-span-7 flex flex-col items-start text-left">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 bg-brand-volt/10 border border-brand-volt/20 px-3.5 py-1.5 rounded-full mb-8 shadow-[0_0_15px_rgba(200,241,53,0.03)]">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-volt opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-volt"></span>
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-brand-volt">v3.0 Live Intelligence</span>
+          </div>
 
-        @keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
-
-        /* ── HERO ── */
-        .hero {
-          min-height:100vh;display:flex;align-items:center;
-          padding:130px 52px 80px;position:relative;z-index:2;
-          display:grid;grid-template-columns:1.1fr .9fr;gap:60px;align-items:center;
-        }
-
-        .hero-left {}
-
-        .hero-badge {
-          display:inline-flex;align-items:center;gap:10px;
-          border:1px solid var(--border2);background:rgba(200,241,53,.05);
-          padding:7px 16px;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);
-          margin-bottom:32px;
-          opacity:0;animation:slideUp .6s .4s ease forwards;
-        }
-        .badge-dot { width:7px;height:7px;background:var(--accent);border-radius:50%;animation:logoPulse 1.8s ease infinite; }
-
-        .hero-title {
-          font-family:'Syne',sans-serif;
-          font-size:clamp(3rem,5.5vw,5.5rem);
-          font-weight:800;line-height:.92;letter-spacing:-.05em;color:#fff;
-          margin-bottom:28px;
-        }
-        .hero-title .line { display:block;overflow:hidden; }
-        .hero-title .line span {
-          display:block;
-          opacity:0;animation:lineReveal .8s ease forwards;
-        }
-        .hero-title .line:nth-child(1) span { animation-delay:.5s; }
-        .hero-title .line:nth-child(2) span { animation-delay:.65s; }
-        .hero-title .line:nth-child(3) span { animation-delay:.8s; }
-        @keyframes lineReveal { from{opacity:0;transform:translateY(100%)} to{opacity:1;transform:translateY(0)} }
-
-        .hero-title .stroke {
-          color:transparent;-webkit-text-stroke:1.5px var(--accent);
-        }
-        .hero-title .accent-word {
-          position:relative;display:inline-block;
-        }
-        .hero-title .accent-word::after {
-          content:'';position:absolute;bottom:4px;left:0;right:0;height:3px;
-          background:var(--accent);transform:scaleX(0);transform-origin:left;
-          animation:underlineGrow .6s 1.4s ease forwards;
-        }
-        @keyframes underlineGrow { to{transform:scaleX(1)} }
-
-        .hero-desc {
-          color:var(--muted);font-size:.83rem;line-height:1.85;max-width:440px;
-          margin-bottom:44px;
-          opacity:0;animation:slideUp .6s .95s ease forwards;
-        }
-
-        .hero-actions {
-          display:flex;gap:18px;align-items:center;
-          opacity:0;animation:slideUp .6s 1.1s ease forwards;
-        }
-
-        .btn-primary {
-          background:var(--accent);color:#040506;padding:15px 36px;
-          font-family:'Syne',sans-serif;font-weight:800;font-size:.85rem;letter-spacing:.04em;
-          border:none;cursor:none;position:relative;overflow:hidden;
-          clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,0 100%);
-          transition:transform .2s,box-shadow .2s;
-        }
-        .btn-primary::after { content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.2) 0%,transparent 50%);opacity:0;transition:opacity .2s; }
-        .btn-primary:hover { transform:translateY(-3px);box-shadow:0 12px 40px rgba(200,241,53,.4); }
-        .btn-primary:hover::after { opacity:1; }
-
-        .btn-ghost {
-          color:var(--muted);font-family:'DM Mono',monospace;font-size:.75rem;
-          letter-spacing:.06em;cursor:none;border:none;background:none;
-          display:flex;align-items:center;gap:8px;transition:color .2s;
-        }
-        .btn-ghost svg { transition:transform .2s; }
-        .btn-ghost:hover { color:var(--text); }
-        .btn-ghost:hover svg { transform:translateX(5px); }
-
-        @keyframes slideUp { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
-
-        /* ── HERO VISUAL ── */
-        .hero-visual {
-          position:relative;
-          opacity:0;animation:slideUp .9s 1s ease forwards;
-        }
-
-        .holo-card {
-          background:var(--card);border:1px solid var(--border);
-          position:relative;overflow:hidden;padding:24px;
-          transform-style:preserve-3d;transition:transform .1s;
-        }
-        .holo-card::before {
-          content:'';position:absolute;inset:0;
-          background:linear-gradient(135deg,rgba(200,241,53,.04) 0%,transparent 40%,rgba(61,255,192,.03) 100%);
-        }
-        .holo-card .top-line {
-          position:absolute;top:0;left:0;right:0;height:1px;
-          background:linear-gradient(90deg,transparent 0%,var(--accent) 40%,var(--accent2) 70%,transparent 100%);
-          animation:shimmer 3s ease infinite;
-        }
-        @keyframes shimmer { 0%{opacity:.4} 50%{opacity:1} 100%{opacity:.4} }
-
-        .mock-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border); }
-        .mock-title { font-family:'Syne',sans-serif;font-size:.78rem;font-weight:700;color:var(--text); }
-        .live-badge {
-          display:flex;align-items:center;gap:6px;
-          background:rgba(200,241,53,.08);border:1px solid rgba(200,241,53,.2);
-          padding:3px 10px;font-size:.6rem;letter-spacing:.1em;color:var(--accent);
-        }
-        .live-dot { width:6px;height:6px;background:var(--accent);border-radius:50%;animation:logoPulse 1.5s infinite; }
-
-        .stats-row { display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px; }
-        .stat-box {
-          background:var(--surface);border:1px solid var(--border);padding:12px 10px;
-          position:relative;overflow:hidden;transition:border-color .3s;
-        }
-        .stat-box:hover { border-color:rgba(200,241,53,.2); }
-        .stat-box::after { content:'';position:absolute;bottom:0;left:0;height:2px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .4s; }
-        .stat-box:hover::after { transform:scaleX(1); }
-        .stat-label { font-size:.58rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px; }
-        .stat-val { font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800;color:#fff; }
-        .stat-up { font-size:.58rem;color:var(--accent);margin-top:2px; }
-
-        /* Chart */
-        .chart-wrap { height:72px;display:flex;align-items:flex-end;gap:3px;margin-bottom:16px;position:relative; }
-        .chart-wrap::after { content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:var(--border); }
-        .bar {
-          flex:1;background:rgba(200,241,53,.1);border-top:1px solid rgba(200,241,53,.3);
-          transform:scaleY(0);transform-origin:bottom;
-          animation:barUp .8s ease forwards;
-        }
-        @keyframes barUp { to{transform:scaleY(1)} }
-        .bar:hover { background:rgba(200,241,53,.25); }
-
-        /* Trend items */
-        .trend-list { display:flex;flex-direction:column;gap:8px; }
-        .trend-item {
-          display:flex;align-items:center;gap:10px;
-          background:var(--surface);border:1px solid var(--border);padding:9px 12px;
-          transition:border-color .25s,transform .25s;
-          animation:slideInRight .5s ease both;
-        }
-        .trend-item:nth-child(1){animation-delay:1.2s}
-        .trend-item:nth-child(2){animation-delay:1.35s}
-        .trend-item:nth-child(3){animation-delay:1.5s}
-        @keyframes slideInRight { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
-        .trend-item:hover { border-color:rgba(200,241,53,.2);transform:translateX(-3px); }
-        .t-icon { width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0; }
-        .t-text { flex:1; }
-        .t-name { font-size:.68rem;color:var(--text);margin-bottom:1px;font-family:'Syne',sans-serif;font-weight:700; }
-        .t-sub { font-size:.58rem;color:var(--muted); }
-        .t-score { font-family:'Syne',sans-serif;font-size:.75rem;font-weight:800; }
-
-        /* ── TICKER ── */
-        .ticker { border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:13px 0;overflow:hidden;position:relative;z-index:2; }
-        .ticker::before,.ticker::after { content:'';position:absolute;top:0;bottom:0;width:120px;z-index:2; }
-        .ticker::before { left:0;background:linear-gradient(90deg,var(--bg),transparent); }
-        .ticker::after { right:0;background:linear-gradient(-90deg,var(--bg),transparent); }
-        .ticker-track { display:flex;gap:56px;animation:tick 22s linear infinite;width:max-content; }
-        @keyframes tick { from{transform:translateX(0)} to{transform:translateX(-50%)} }
-        .tick-item { display:flex;align-items:center;gap:12px;font-size:.68rem;letter-spacing:.08em;color:var(--muted);white-space:nowrap; }
-        .tick-item strong { color:var(--accent);font-family:'Syne',sans-serif;font-weight:700; }
-        .tick-sep { opacity:.3; }
-
-        /* ── SECTIONS ── */
-        .section { padding:110px 52px;max-width:1240px;margin:0 auto;position:relative;z-index:2; }
-
-        .section-eyebrow {
-          font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);
-          margin-bottom:14px;display:flex;align-items:center;gap:12px;
-        }
-        .section-eyebrow::before { content:'';width:28px;height:1px;background:var(--accent);opacity:.6; }
-
-        .section-h {
-          font-family:'Syne',sans-serif;
-          font-size:clamp(2rem,3.2vw,3rem);
-          font-weight:800;letter-spacing:-.04em;color:#fff;margin-bottom:16px;line-height:1.05;
-        }
-        .section-h em { font-style:normal;color:var(--accent); }
-        .section-h .stroke-text { color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.3); }
-
-        .section-sub { color:var(--muted);font-size:.8rem;line-height:1.9;max-width:500px;margin-bottom:64px; }
-
-        /* ── FEATURE GRID ── */
-        .feat-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border); border:1px solid var(--border); }
-
-        .feat-card {
-          background:var(--bg);padding:36px 30px;position:relative;overflow:hidden;
-          transition:background .3s;
-        }
-        .feat-card .hover-bg {
-          position:absolute;inset:0;
-          background:linear-gradient(135deg,rgba(200,241,53,.05) 0%,transparent 60%);
-          opacity:0;transition:opacity .4s;
-        }
-        .feat-card:hover { background:var(--card); }
-        .feat-card:hover .hover-bg { opacity:1; }
-        .feat-card .corner {
-          position:absolute;top:0;right:0;width:0;height:0;
-          border-style:solid;border-width:0 30px 30px 0;
-          border-color:transparent var(--border) transparent transparent;
-          transition:border-width .3s;
-        }
-        .feat-card:hover .corner { border-width:0 40px 40px 0;border-color:transparent rgba(200,241,53,.2) transparent transparent; }
-
-        .feat-num { font-family:'Syne',sans-serif;font-size:.6rem;font-weight:700;color:var(--muted);letter-spacing:.2em;margin-bottom:18px;opacity:.5; }
-        .feat-icon {
-          width:44px;height:44px;border:1px solid var(--border);
-          display:flex;align-items:center;justify-content:center;margin-bottom:22px;
-          font-size:1.1rem;transition:border-color .3s,background .3s,transform .3s;
-        }
-        .feat-card:hover .feat-icon { border-color:rgba(200,241,53,.35);background:rgba(200,241,53,.07);transform:rotate(-6deg) scale(1.1); }
-        .feat-name { font-family:'Syne',sans-serif;font-size:.95rem;font-weight:800;color:#fff;margin-bottom:10px;letter-spacing:-.01em; }
-        .feat-desc { color:var(--muted);font-size:.73rem;line-height:1.8; }
-        .feat-tags { display:flex;flex-wrap:wrap;gap:6px;margin-top:16px; }
-        .feat-tag { font-size:.58rem;letter-spacing:.08em;padding:3px 8px;border:1px solid var(--border);color:var(--muted);text-transform:uppercase;transition:border-color .25s,color .25s; }
-        .feat-card:hover .feat-tag { border-color:rgba(200,241,53,.15);color:rgba(200,241,53,.6); }
-
-        /* ── MARQUEE ── */
-        .marquee-wrap { padding:48px 0;overflow:hidden;border-top:1px solid var(--border);border-bottom:1px solid var(--border);position:relative;z-index:2; }
-        .marquee-track { display:flex;gap:56px;animation:marquee 18s linear infinite;width:max-content; }
-        @keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
-        .m-word { font-family:'Syne',sans-serif;font-size:clamp(1.6rem,2.8vw,2.4rem);font-weight:800;letter-spacing:-.03em;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.1);white-space:nowrap;transition:color .3s,-webkit-text-stroke .3s; }
-        .m-word.solid { color:#fff;-webkit-text-stroke:0; }
-        .m-dot { font-family:'Syne',sans-serif;font-size:1rem;color:var(--accent);opacity:.4; }
-
-        /* ── HOW IT WORKS ── */
-        .how-wrap { display:grid;grid-template-columns:1fr;max-width:800px;margin:0 auto;gap:72px;align-items:start; }
-
-        .steps { display:flex;flex-direction:column; }
-        .step {
-          display:flex;gap:24px;padding:28px 0;border-bottom:1px solid var(--border);
-          position:relative;transition:padding-left .3s;cursor:default;
-          opacity:0;transform:translateX(-20px);transition:opacity .5s,transform .5s,padding-left .3s;
-        }
-        .step.visible { opacity:1;transform:translateX(0); }
-        .step:first-child { border-top:1px solid var(--border); }
-        .step:hover { padding-left:12px; }
-        .step-line {
-          position:absolute;left:0;top:0;bottom:0;width:2px;
-          background:linear-gradient(to bottom,var(--accent),transparent);
-          transform:scaleY(0);transform-origin:top;transition:transform .5s .3s;
-        }
-        .step.visible .step-line { transform:scaleY(1); }
-        .step-n { font-family:'Syne',sans-serif;font-size:.62rem;font-weight:700;color:var(--accent);opacity:.7;width:26px;flex-shrink:0;padding-top:2px;letter-spacing:.1em; }
-        .step-name { font-family:'Syne',sans-serif;font-size:.92rem;font-weight:700;color:#fff;margin-bottom:7px; }
-        .step-desc { color:var(--muted);font-size:.73rem;line-height:1.75; }
-
-        /* Terminal */
-        .terminal {
-          background:var(--card);border:1px solid var(--border);
-          position:relative;overflow:hidden;
-          opacity:0;transform:translateY(20px);transition:opacity .6s .4s,transform .6s .4s;
-        }
-        .terminal.visible { opacity:1;transform:translateY(0); }
-        .terminal::before { content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent2),transparent); }
-        .term-head { padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px; }
-        .d { width:9px;height:9px;border-radius:50%; }
-        .d1{background:#ff5f57}.d2{background:#febc2e}.d3{background:#28c840}
-        .term-lbl { font-size:.62rem;color:var(--muted);margin-left:10px;letter-spacing:.08em; }
-        .term-body { padding:20px;font-size:.7rem;line-height:2; }
-        .tl { display:flex;gap:8px;color:var(--muted); }
-        .tl .p { color:var(--accent);opacity:.8; }
-        .tl .c { color:var(--text); }
-        .tl .v { color:var(--accent2); }
-        .tl .h { color:var(--accent3); }
-        .tl .g { color:var(--accent); }
-        .tl .i { font-style:italic; }
-        .blink { display:inline-block;width:7px;height:13px;background:var(--accent);margin-left:2px;animation:blink 1s step-end infinite;vertical-align:middle; }
-        @keyframes blink { 50%{opacity:0} }
-
-        /* ── PRICING ── */
-        .pricing-wrap { position:relative; }
-
-        .offer-banner {
-          background:linear-gradient(135deg,#1a0f00 0%,#0d1a00 100%);
-          border:1px solid rgba(200,241,53,.3);
-          padding:16px 28px;margin-bottom:2px;
-          display:flex;align-items:center;justify-content:space-between;
-          position:relative;overflow:hidden;
-        }
-        .offer-banner::before {
-          content:'';position:absolute;inset:0;
-          background:linear-gradient(90deg,transparent 0%,rgba(200,241,53,.04) 50%,transparent 100%);
-          animation:scanline 3s ease-in-out infinite;
-        }
-        @keyframes scanline { 0%,100%{transform:translateX(-100%)} 50%{transform:translateX(100%)} }
-        .offer-left { display:flex;align-items:center;gap:14px; }
-        .offer-tag { background:var(--accent3);color:#fff;font-family:'Syne',sans-serif;font-size:.62rem;font-weight:800;letter-spacing:.1em;padding:4px 10px; }
-        .offer-text { font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700;color:#fff; }
-        .offer-sub { font-size:.65rem;color:var(--muted);margin-top:2px; }
-        .offer-countdown { text-align:right; }
-        .offer-count-label { font-size:.58rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px; }
-        .timer { display:flex;gap:6px;align-items:center; }
-        .time-block { text-align:center; }
-        .time-num { font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:var(--accent);line-height:1; }
-        .time-label { font-size:.52rem;color:var(--muted);letter-spacing:.06em; }
-        .time-sep { font-family:'Syne',sans-serif;font-size:1rem;color:var(--accent);opacity:.4;margin-bottom:8px; }
-
-        .pricing-card {
-          background:var(--card);border:1px solid rgba(200,241,53,.2);
-          padding:52px 48px;position:relative;overflow:hidden;
-          display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;
-        }
-        .pricing-card::before { content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2)); }
-        .pricing-card::after {
-          content:'';position:absolute;
-          width:400px;height:400px;
-          background:radial-gradient(circle,rgba(200,241,53,.06) 0%,transparent 70%);
-          right:-100px;top:-100px;pointer-events:none;
-        }
-
-        .price-left {}
-        .price-tier { font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:20px;display:flex;align-items:center;gap:8px; }
-        .tier-dot { width:5px;height:5px;background:var(--accent);border-radius:50%; }
-
-        .price-amount {
-          display:flex;align-items:flex-start;gap:0;margin-bottom:4px;
-        }
-        .price-currency { font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:var(--muted);margin-top:10px; }
-        .price-num { font-family:'Syne',sans-serif;font-size:5rem;font-weight:800;line-height:1;letter-spacing:-.05em;color:#fff; }
-        .price-period { font-family:'Syne',sans-serif;font-size:.85rem;font-weight:600;color:var(--muted);margin-top:auto;margin-bottom:10px;margin-left:4px; }
-
-        .price-was {
-          display:flex;align-items:center;gap:10px;margin-bottom:8px;
-        }
-        .was-amt { font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;color:var(--muted);text-decoration:line-through;opacity:.5; }
-        .save-badge {
-          background:rgba(255,79,109,.15);border:1px solid rgba(255,79,109,.3);
-          color:var(--accent3);font-size:.62rem;font-weight:700;letter-spacing:.08em;
-          padding:3px 10px;font-family:'Syne',sans-serif;
-          animation:badgePop .4s 1.5s ease both;
-        }
-        @keyframes badgePop { from{transform:scale(0);opacity:0} 80%{transform:scale(1.1)} to{transform:scale(1);opacity:1} }
-
-        .price-trial { font-size:.7rem;color:var(--accent);margin-bottom:28px;display:flex;align-items:center;gap:6px; }
-        .price-trial::before { content:'★';font-size:.7rem; }
-
-        .btn-pricing {
-          width:100%;padding:16px;
-          font-family:'Syne',sans-serif;font-size:.85rem;font-weight:800;letter-spacing:.06em;
-          background:var(--accent);color:#040506;border:none;cursor:none;
-          position:relative;overflow:hidden;
-          clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%);
-          transition:transform .2s,box-shadow .2s;
-        }
-        .btn-pricing::before { content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);transition:left .5s; }
-        .btn-pricing:hover::before { left:100%; }
-        .btn-pricing:hover { transform:translateY(-3px);box-shadow:0 12px 40px rgba(200,241,53,.45); }
-
-        .price-note { font-size:.65rem;color:var(--muted);margin-top:12px;text-align:center;letter-spacing:.04em; }
-
-        .price-right {}
-        .feat-list { list-style:none;display:flex;flex-direction:column;gap:12px; }
-        .feat-item {
-          display:flex;gap:12px;align-items:flex-start;
-          font-size:.73rem;color:var(--text);
-          opacity:0;transform:translateX(20px);
-          transition:opacity .4s,transform .4s;
-        }
-        .feat-item.visible { opacity:1;transform:translateX(0); }
-        .feat-check { color:var(--accent);flex-shrink:0;margin-top:1px;font-size:.75rem; }
-
-        /* ── CTA ── */
-        .cta-wrap {
-          margin:0 52px 90px;border:1px solid var(--border);
-          background:var(--card);padding:100px;
-          text-align:center;position:relative;overflow:hidden;z-index:2;
-        }
-        .cta-wrap::before {
-          content:'';position:absolute;inset:0;
-          background:radial-gradient(ellipse 60% 80% at 50% 120%,rgba(200,241,53,.08) 0%,transparent 100%);
-        }
-        .cta-ghost-text {
-          position:absolute;font-family:'Syne',sans-serif;font-size:15vw;font-weight:800;
-          color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.025);
-          left:50%;top:50%;transform:translate(-50%,-50%);white-space:nowrap;letter-spacing:-.04em;
-          pointer-events:none;user-select:none;
-        }
-        .cta-eyebrow { font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;position:relative; }
-        .cta-title {
-          font-family:'Syne',sans-serif;font-size:clamp(2.2rem,4vw,4rem);font-weight:800;
-          letter-spacing:-.04em;color:#fff;margin-bottom:20px;position:relative;
-        }
-        .cta-desc { color:var(--muted);font-size:.8rem;line-height:1.9;max-width:440px;margin:0 auto 44px;position:relative; }
-        .cta-actions { position:relative;display:flex;gap:18px;justify-content:center;align-items:center; }
-
-        /* ── FOOTER ── */
-        footer {
-          border-top:1px solid var(--border);padding:40px 52px;
-          display:flex;justify-content:space-between;align-items:center;position:relative;z-index:2;
-        }
-        .footer-logo { font-family:'Syne',sans-serif;font-weight:800;font-size:.95rem;letter-spacing:-.02em;color:var(--muted); }
-        .footer-links { display:flex;gap:28px; }
-        .footer-links a { font-size:.68rem;color:var(--muted);text-decoration:none;letter-spacing:.06em;text-transform:uppercase;transition:color .2s; }
-        .footer-links a:hover { color:var(--text); }
-        .footer-copy { font-size:.65rem;color:var(--muted);opacity:.5; }
-
-        /* ── SCROLL REVEAL ── */
-        .sr { opacity:0;transform:translateY(36px);transition:opacity .7s ease,transform .7s ease; }
-        .sr.vis { opacity:1;transform:translateY(0); }
-        .sr-d1{transition-delay:.1s}.sr-d2{transition-delay:.2s}.sr-d3{transition-delay:.3s}.sr-d4{transition-delay:.4s}.sr-d5{transition-delay:.5s}
-
-        /* ── FLOATING ORBS ── */
-        .orb {
-          position:fixed;border-radius:50%;pointer-events:none;z-index:1;filter:blur(80px);
-        }
-        .orb1 { width:400px;height:400px;background:rgba(200,241,53,.04);top:10%;right:5%;animation:float1 12s ease-in-out infinite; }
-        .orb2 { width:300px;height:300px;background:rgba(61,255,192,.03);bottom:20%;left:5%;animation:float2 15s ease-in-out infinite; }
-        .orb3 { width:200px;height:200px;background:rgba(108,99,255,.04);top:50%;left:40%;animation:float3 10s ease-in-out infinite; }
-        @keyframes float1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-30px,40px)} }
-        @keyframes float2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(40px,-30px)} }
-        @keyframes float3 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-20px,20px)} }
-
-        /* ── RESPONSIVE ── */
-        @media(max-width:900px){
-          nav{padding:16px 24px}
-          .nav-links{display:none}
-          .hero{grid-template-columns:1fr;padding:100px 24px 60px}
-          .hero-visual{display:none}
-          .section{padding:64px 24px}
-          .feat-grid{grid-template-columns:1fr}
-          .how-wrap{grid-template-columns:1fr}
-          .pricing-card{grid-template-columns:1fr;padding:36px 28px}
-          .cta-wrap{padding:60px 28px;margin:0 24px 60px}
-          footer{flex-direction:column;gap:16px;padding:32px 24px;text-align:center}
-          .offer-banner{flex-direction:column;gap:16px}
-        }
-      `}</style>
-
-      <div id="cur"></div>
-      <div id="cur-ring"></div>
-
-      {/* Floating orbs */}
-      <div className="orb orb1"></div>
-      <div className="orb orb2"></div>
-      <div className="orb orb3"></div>
-
-      {/* Particle canvas */}
-      <canvas id="bg-canvas"></canvas>
-
-      {/* ── NAV ── */}
-      <nav id="nav">
-        <div className="logo"><div className="logo-pulse"></div>Vyron Intelligence</div>
-        <ul className="nav-links">
-          <li><a href="#">Features</a></li>
-          <li><a href="#">Trends</a></li>
-          <li><a href="#">Pricing</a></li>
-          <li><a href="#">Docs</a></li>
-        </ul>
-        <button className="nav-cta">Get Access →</button>
-      </nav>
-
-      {/* ── HERO ── */}
-      <section className="hero">
-        <div className="hero-left">
-          <div className="hero-badge"><div className="badge-dot"></div>Live Intelligence Platform · v3.0</div>
-          <h1 className="hero-title">
-            <div className="line"><span>Outrank.</span></div>
-            <div className="line"><span>Outsmart.</span></div>
-            <div className="line"><span className="stroke"><em>Outgrow.</em></span></div>
+          {/* Main Title */}
+          <h1 className="font-display font-extrabold text-5xl md:text-4xl lg:text-5xl xl:text-7xl leading-[1.0] tracking-tight text-white mb-4 md:mb-6">
+            Outrank.<br/>
+            Outsmart.<br/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-volt via-[#d8f553] to-brand-mint drop-shadow-[0_0_15px_rgba(200,241,53,0.1)] text-glow-volt">
+              Outgrow.
+            </span>
           </h1>
-          <p className="hero-desc">Real-time YouTube analytics, viral trend radar, and competitor intelligence — everything to dominate your niche before anyone else does.</p>
-          <div className="hero-actions">
-            <button className="btn-primary">Start Free Trial →</button>
-            <button className="btn-ghost">Watch demo <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
+
+          {/* Description */}
+          <p className="text-zinc-400 text-base md:text-xs lg:text-sm xl:text-base leading-relaxed max-w-xl mb-6 md:mb-8 xl:mb-10 font-normal">
+            Vyron continuously scans competitor channels, scores emerging trends, and parses custom YouTube data via semantic vector structures. Master your niche before competitors realize the trend exists.
+          </p>
+
+          {/* Action Buttons */}
+          <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
+            <a 
+              href="#pricing"
+              className="w-full sm:w-auto px-6 md:px-5 lg:px-8 py-3 md:py-2.5 lg:py-4 bg-brand-volt hover:bg-[#d6fb3a] text-black font-extrabold text-sm md:text-xs lg:text-sm uppercase tracking-wider rounded-xl transition-all shadow-[0_0_30px_rgba(200,241,53,0.25)] hover:shadow-[0_0_40px_rgba(200,241,53,0.45)] hover:-translate-y-0.5 text-center flex items-center justify-center gap-2"
+            >
+              Get Started Free <ArrowRight className="w-4 h-4" />
+            </a>
+            <a 
+              href="#demo"
+              className="w-full sm:w-auto px-6 md:px-5 lg:px-8 py-3 md:py-2.5 lg:py-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-white font-extrabold text-sm md:text-xs lg:text-sm uppercase tracking-wider rounded-xl transition-all text-center flex items-center justify-center gap-2 hover:-translate-y-0.5"
+            >
+              <Play className="w-4 h-4 fill-white" /> Watch Demo
+            </a>
+          </div>
+
+          {/* Quick Stats banner */}
+          <div className="mt-8 md:mt-4 lg:mt-6 xl:mt-12 pt-6 md:pt-3 lg:pt-4 xl:pt-8 border-t border-zinc-900 w-full grid grid-cols-3 gap-4 md:gap-2 lg:gap-3 xl:gap-6 text-left">
+            <div>
+              <p className="font-mono text-xl md:text-base lg:text-lg xl:text-2xl font-bold text-white tracking-tight">48K+</p>
+              <p className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Channels Scraped</p>
+            </div>
+            <div>
+              <p className="font-mono text-xl md:text-base lg:text-lg xl:text-2xl font-bold text-white tracking-tight">1.5 hr</p>
+              <p className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Trend Scan Cycle</p>
+            </div>
+            <div>
+              <p className="font-mono text-xl md:text-base lg:text-lg xl:text-2xl font-bold text-white tracking-tight">94.8%</p>
+              <p className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Score Accuracy</p>
+            </div>
           </div>
         </div>
 
-        <div className="hero-visual">
-          <div className="holo-card">
-            <div className="top-line"></div>
-            <div className="mock-header">
-              <span className="mock-title">Channel Intelligence</span>
-              <span className="live-badge"><span className="live-dot"></span> LIVE</span>
+        {/* Hero Visual Card (3D Tilt Widget) */}
+        <div className="md:col-span-6 lg:col-span-5 flex items-center justify-center relative">
+          <div 
+            ref={heroCardRef}
+            onMouseMove={handleCardMouseMove}
+            onMouseLeave={handleCardMouseLeave}
+            className="w-full max-w-[360px] lg:max-w-[420px] rounded-3xl p-4 lg:p-6 glass-panel-glow relative overflow-hidden transition-all duration-200"
+            style={{ 
+              transform: cardTransform,
+              boxShadow: '0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(200,241,53,0.06)'
+            }}
+          >
+            {/* Top decorative accent bar */}
+            <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-brand-volt to-brand-mint opacity-85" />
+            
+            {/* Header info */}
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-zinc-900">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-brand-volt animate-pulse" />
+                <span className="font-mono text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Growth Analytics</span>
+              </div>
+              <span className="font-mono text-[9px] font-black text-brand-mint bg-brand-mint/10 border border-brand-mint/20 px-2 py-0.5 rounded">LIVE ACTIVE</span>
             </div>
-            <div className="stats-row">
-              <div className="stat-box">
-                <div className="stat-label">Subscribers</div>
-                <div className="stat-val" id="s1">48.2K</div>
-                <div className="stat-up">↑ +2.1% today</div>
+
+            {/* Channels metrics */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="bg-zinc-950/60 border border-white/[0.03] p-4 rounded-2xl relative overflow-hidden group hover:border-brand-volt/20 transition-colors">
+                <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Subscriber Net</p>
+                <p className="font-display font-extrabold text-2xl text-white">48,250</p>
+                <p className="text-[10px] text-brand-volt font-bold mt-1">↑ +2.1% today</p>
+                <div className="absolute bottom-0 right-0 w-8 h-8 bg-brand-volt/[0.02] rounded-tl-2xl" />
               </div>
-              <div className="stat-box">
-                <div className="stat-label">Total Views</div>
-                <div className="stat-val" id="s2">3.4M</div>
-                <div className="stat-up">↑ +8.6K</div>
-              </div>
-              <div className="stat-box">
-                <div className="stat-label">Hot Videos</div>
-                <div className="stat-val" id="s3">3</div>
-                <div className="stat-up">↑ Above avg</div>
+              <div className="bg-zinc-950/60 border border-white/[0.03] p-4 rounded-2xl relative overflow-hidden group hover:border-brand-mint/20 transition-colors">
+                <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Virality Index</p>
+                <p className="font-display font-extrabold text-2xl text-white">92.4 <span className="text-xs text-brand-mint">/100</span></p>
+                <p className="text-[10px] text-brand-mint font-bold mt-1">↑ Strong Surge</p>
+                <div className="absolute bottom-0 right-0 w-8 h-8 bg-brand-mint/[0.02] rounded-tl-2xl" />
               </div>
             </div>
-            <div className="chart-wrap" id="chart"></div>
-            <div className="trend-list">
-              <div className="trend-item">
-                <div className="t-icon">🔥</div>
-                <div className="t-text"><div className="t-name">AI Tools for Creators</div><div className="t-sub">viral momentum detected</div></div>
-                <div className="t-score" style={{color: 'var(--accent3)'}}>HOT</div>
+
+            {/* Glowing Chart Simulation */}
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">Weekly View Volume</span>
+                <span className="text-[9px] font-mono text-zinc-400">Total: 3.4M</span>
               </div>
-              <div className="trend-item">
-                <div className="t-icon">📈</div>
-                <div className="t-text"><div className="t-name">YouTube SEO 2025</div><div className="t-sub">growing above niche avg</div></div>
-                <div className="t-score" style={{color: 'var(--accent)'}}>+147%</div>
+              <div className="h-28 flex items-end justify-between gap-1.5 pt-4 pb-2 relative border-b border-zinc-900">
+                {/* Simulated Chart Bars with scaling delays */}
+                {[30, 48, 35, 62, 55, 75, 68, 88, 98, 72, 85, 95].map((val, idx) => (
+                  <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end group">
+                    {/* Tooltip on hover */}
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-volt text-black text-[8px] font-black px-1 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 whitespace-nowrap">
+                      +{val}%
+                    </div>
+                    {/* Bar */}
+                    <div 
+                      className="w-full bg-brand-volt/10 group-hover:bg-brand-volt/30 border-t border-brand-volt/30 rounded-t-[2px] transition-all duration-500 cursor-pointer origin-bottom"
+                      style={{ 
+                        height: `${val}%`, 
+                        animationDelay: `${idx * 0.05}s`
+                      }} 
+                    />
+                  </div>
+                ))}
               </div>
-              <div className="trend-item">
-                <div className="t-icon">🎯</div>
-                <div className="t-text"><div className="t-name">Competitor gap found</div><div className="t-sub">high-value keyword uncovered</div></div>
-                <div className="t-score" style={{color: 'var(--accent2)'}}>NEW</div>
+            </div>
+
+            {/* Hot topics block */}
+            <div className="space-y-2">
+              <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider mb-2">Topic Velocity Alerts</p>
+              
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-950/40 border border-white/[0.03] hover:border-zinc-800 transition-colors">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-6 h-6 rounded-lg bg-red-500/10 flex items-center justify-center text-xs">🔥</div>
+                  <div>
+                    <p className="text-[11px] font-bold text-white">AI Agents 2026</p>
+                    <p className="text-[8px] text-zinc-500 font-medium">Scraped 3m ago · Tech</p>
+                  </div>
+                </div>
+                <span className="text-[9px] font-mono font-black text-brand-rose bg-brand-rose/10 border border-brand-rose/20 px-2 py-0.5 rounded">VIRAL</span>
+              </div>
+
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-950/40 border border-white/[0.03] hover:border-zinc-800 transition-colors">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-6 h-6 rounded-lg bg-brand-volt/10 flex items-center justify-center text-xs">🚀</div>
+                  <div>
+                    <p className="text-[11px] font-bold text-white">Milvus Vector Database</p>
+                    <p className="text-[8px] text-zinc-500 font-medium">Scraped 15m ago · Dev</p>
+                  </div>
+                </div>
+                <span className="text-[9px] font-mono font-black text-brand-volt bg-brand-volt/10 border border-brand-volt/20 px-2 py-0.5 rounded">+147%</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Layered floating metric badge 1 (Top-Right) - visible on lg screens and up */}
+          <div className="hidden lg:flex items-center gap-2.5 p-3 rounded-full bg-zinc-950/90 border border-brand-volt/20 shadow-[0_15px_30px_rgba(0,0,0,0.8)] absolute -top-6 lg:-right-2 xl:-right-16 scale-90 xl:scale-100 z-25 backdrop-blur-md transition-all duration-300 hover:-translate-y-1">
+            <div className="w-5 h-5 rounded-full bg-brand-volt/10 flex items-center justify-center text-[10px]">📈</div>
+            <div>
+              <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest leading-none">Niche Gap</p>
+              <p className="text-[10px] font-black text-white leading-none mt-0.5">+28.4% CPM</p>
+            </div>
+          </div>
+
+          {/* Layered floating audit card 2 (Bottom-Right) - visible on lg screens and up */}
+          <div className="hidden lg:flex flex-col gap-2.5 p-4 rounded-2xl bg-zinc-950/90 border border-brand-mint/20 shadow-[0_20px_40px_rgba(0,0,0,0.9)] absolute -bottom-10 lg:-right-2 xl:-right-8 w-52 scale-90 xl:scale-100 z-25 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 text-left">
+            <div className="flex items-center justify-between">
+              <span className="text-[8px] font-mono font-bold text-zinc-400 uppercase tracking-widest">Competitor DNA</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-mint animate-pulse" />
+            </div>
+            <div>
+              <p className="text-[8px] text-zinc-500 uppercase font-black tracking-wider leading-none">Velocity Score</p>
+              <div className="flex items-baseline gap-1 mt-0.5">
+                <span className="text-base font-display font-extrabold text-white">88.2</span>
+                <span className="text-[8px] font-bold text-brand-mint">↑ +14%</span>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <div className="flex justify-between text-[7px] font-mono text-zinc-500 leading-none">
+                <span>QUEUE</span>
+                <span>94%</span>
+              </div>
+              <div className="w-full h-1 bg-zinc-900 rounded-full overflow-hidden">
+                <div className="h-full bg-brand-mint rounded-full" style={{ width: '94%' }} />
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── DEMO DASHBOARD ── */}
-      <div className="section" style={{ paddingTop: '40px', paddingBottom: '40px' }}>
-        <div className="section-eyebrow sr">Live Preview</div>
-        <h2 className="section-h sr sr-d1">See Vyron in <em>Action</em></h2>
-        <p className="section-sub sr sr-d2" style={{ marginBottom: '40px' }}>Explore the dashboard features directly in your browser with live demo data.</p>
-        <DemoDashboard />
-      </div>
-
-      {/* ── TICKER ── */}
-      <div className="ticker">
-        <div className="ticker-track">
-          <div className="tick-item"><strong>48.2K</strong> channels tracked <span className="tick-sep">—</span></div>
-          <div className="tick-item"><strong>Trend Radar</strong> updates hourly <span className="tick-sep">—</span></div>
-          <div className="tick-item"><strong>3.4M+</strong> data points daily <span className="tick-sep">—</span></div>
-          <div className="tick-item"><strong>Competitor Matrix</strong> 50+ niches <span className="tick-sep">—</span></div>
-          <div className="tick-item"><strong>AI-powered</strong> virality score <span className="tick-sep">—</span></div>
-          <div className="tick-item"><strong>Real-time</strong> growth projections <span className="tick-sep">—</span></div>
-          <div className="tick-item"><strong>48.2K</strong> channels tracked <span className="tick-sep">—</span></div>
-          <div className="tick-item"><strong>Trend Radar</strong> updates hourly <span className="tick-sep">—</span></div>
-          <div className="tick-item"><strong>3.4M+</strong> data points daily <span className="tick-sep">—</span></div>
-          <div className="tick-item"><strong>Competitor Matrix</strong> 50+ niches <span className="tick-sep">—</span></div>
-          <div className="tick-item"><strong>AI-powered</strong> virality score <span className="tick-sep">—</span></div>
-          <div className="tick-item"><strong>Real-time</strong> growth projections <span className="tick-sep">—</span></div>
-        </div>
-      </div>
-
-      {/* ── FEATURES ── */}
-      <div className="section">
-        <div className="section-eyebrow sr">Core Capabilities</div>
-        <h2 className="section-h sr sr-d1">Built for creators who<br/>play to <em>win</em></h2>
-        <p className="section-sub sr sr-d2">Every tool to understand your channel, outsmart competitors, and find viral content before everyone else does.</p>
-        <div className="feat-grid sr sr-d2">
-          <div className="feat-card">
-            <div className="hover-bg"></div><div className="corner"></div>
-            <div className="feat-num">01</div>
-            <div className="feat-icon">📊</div>
-            <div className="feat-name">Analytics & Tracking</div>
-            <p className="feat-desc">Daily snapshots tracking subscribers, views, and video counts. Growth projections based on historical data and recent performance patterns.</p>
-            <div className="feat-tags"><span className="feat-tag">Historical</span><span className="feat-tag">Projections</span><span className="feat-tag">Milestones</span></div>
+      {/* ── LIVE INTERACTIVE SCALING TICKER ── */}
+      <section className="border-y border-zinc-900 bg-black/40 backdrop-blur-sm py-4 overflow-hidden relative z-10">
+        <div className="marquee-track flex gap-16 whitespace-nowrap flex-row w-max">
+          <div className="flex gap-16 text-zinc-500 font-mono text-[11px] font-bold uppercase tracking-wider">
+            <span>🚀 <strong className="text-brand-volt">48.2K</strong> channels scanned daily</span>
+            <span>✦</span>
+            <span>⚡ <strong className="text-white">Trend Radar</strong> cycle runs hourly</span>
+            <span>✦</span>
+            <span>📊 <strong className="text-brand-mint">3.4M+</strong> data points processed</span>
+            <span>✦</span>
+            <span>🔥 <strong className="text-brand-rose">Competitor Matrix</strong> 50+ key niches mapped</span>
+            <span>✦</span>
+            <span>🎯 <strong className="text-white">Milvus Integration</strong> semantic search</span>
           </div>
-          <div className="feat-card">
-            <div className="hover-bg"></div><div className="corner"></div>
-            <div className="feat-num">02</div>
-            <div className="feat-icon">🔭</div>
-            <div className="feat-name">Trend Radar</div>
-            <p className="feat-desc">Real-time scanning of niche content to identify viral momentum. AI generates Quick Wins and tracks psychological hooks and winning patterns.</p>
-            <div className="feat-tags"><span className="feat-tag">Real-time</span><span className="feat-tag">AI Insights</span><span className="feat-tag">Viral Hooks</span></div>
-          </div>
-          <div className="feat-card">
-            <div className="hover-bg"></div><div className="corner"></div>
-            <div className="feat-num">03</div>
-            <div className="feat-icon">⚔️</div>
-            <div className="feat-name">Competitor Matrix</div>
-            <p className="feat-desc">Identify rivals, market leaders, and rising stars. Deep-dive analysis on competitor Content DNA and growth velocity.</p>
-            <div className="feat-tags"><span className="feat-tag">Content DNA</span><span className="feat-tag">Velocity</span><span className="feat-tag">Benchmarks</span></div>
-          </div>
-          <div className="feat-card">
-            <div className="hover-bg"></div><div className="corner"></div>
-            <div className="feat-num">04</div>
-            <div className="feat-icon">🔍</div>
-            <div className="feat-name">Advanced Search</div>
-            <p className="feat-desc">Multi-parameter YouTube search with region, language, date, and duration filters. Sort by proprietary virality and growth scores.</p>
-            <div className="feat-tags"><span className="feat-tag">Virality Score</span><span className="feat-tag">Growth Rank</span><span className="feat-tag">Precision</span></div>
-          </div>
-          <div className="feat-card">
-            <div className="hover-bg"></div><div className="corner"></div>
-            <div className="feat-num">05</div>
-            <div className="feat-icon">📁</div>
-            <div className="feat-name">Research Library</div>
-            <p className="feat-desc">Save trends, competitor analysis, and content ideas. Built-in rich text editor for deep-dive research, strategy notes, and content blueprints.</p>
-            <div className="feat-tags"><span className="feat-tag">Notes</span><span className="feat-tag">Blueprints</span><span className="feat-tag">Strategy</span></div>
-          </div>
-          <div className="feat-card">
-            <div className="hover-bg"></div><div className="corner"></div>
-            <div className="feat-num">06</div>
-            <div className="feat-icon">⚡</div>
-            <div className="feat-name">AI Infrastructure</div>
-            <p className="feat-desc">Vector search via Zilliz/Milvus for semantic content matching. Background automation for daily snapshots and automated email reporting.</p>
-            <div className="feat-tags"><span className="feat-tag">Vector Search</span><span className="feat-tag">Automation</span><span className="feat-tag">Email Reports</span></div>
+          <div className="flex gap-16 text-zinc-500 font-mono text-[11px] font-bold uppercase tracking-wider">
+            <span>🚀 <strong className="text-brand-volt">48.2K</strong> channels scanned daily</span>
+            <span>✦</span>
+            <span>⚡ <strong className="text-white">Trend Radar</strong> cycle runs hourly</span>
+            <span>✦</span>
+            <span>📊 <strong className="text-brand-mint">3.4M+</strong> data points processed</span>
+            <span>✦</span>
+            <span>🔥 <strong className="text-brand-rose">Competitor Matrix</strong> 50+ key niches mapped</span>
+            <span>✦</span>
+            <span>🎯 <strong className="text-white">Milvus Integration</strong> semantic search</span>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* ── MARQUEE ── */}
-      <div className="marquee-wrap">
-        <div className="marquee-track">
-          <span className="m-word">Analytics</span><span className="m-dot">✦</span>
-          <span className="m-word solid">Trend Radar</span><span className="m-dot">✦</span>
-          <span className="m-word">Competitor Intel</span><span className="m-dot">✦</span>
-          <span className="m-word solid">Virality Score</span><span className="m-dot">✦</span>
-          <span className="m-word">Growth Engine</span><span className="m-dot">✦</span>
-          <span className="m-word solid">Deep Research</span><span className="m-dot">✦</span>
-          <span className="m-word">Analytics</span><span className="m-dot">✦</span>
-          <span className="m-word solid">Trend Radar</span><span className="m-dot">✦</span>
-          <span className="m-word">Competitor Intel</span><span className="m-dot">✦</span>
-          <span className="m-word solid">Virality Score</span><span className="m-dot">✦</span>
-          <span className="m-word">Growth Engine</span><span className="m-dot">✦</span>
-          <span className="m-word solid">Deep Research</span><span className="m-dot">✦</span>
+      {/* ── LIVE DEMO PREVIEW (INTEGRATED INTERACTIVE COMPONENT) ── */}
+      <section id="demo" className="relative z-10 py-20 px-4 md:px-8 max-w-7xl mx-auto scroll-mt-20">
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <div className="inline-flex items-center gap-2 bg-brand-mint/10 border border-brand-mint/20 px-3.5 py-1.5 rounded-full mb-4">
+            <Sparkles className="w-3.5 h-3.5 text-brand-mint" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-brand-mint">Dynamic Simulator</span>
+          </div>
+          <h2 className="font-display font-extrabold text-3.5xl md:text-5xl tracking-tight text-white mb-4">
+            Explore the Vyron Intelligence Console
+          </h2>
+          <p className="text-zinc-400 text-sm leading-relaxed max-w-md mx-auto">
+            Interact with our simulated live interface. Explore trends, check competitor data, and see how our vector ranking model scores content.
+          </p>
         </div>
-      </div>
 
-      {/* ── HOW IT WORKS ── */}
-      <div className="section">
-        <div className="section-eyebrow sr">Process</div>
-        <h2 className="section-h sr sr-d1">Intelligence in <em>motion</em></h2>
-        <div className="how-wrap">
-          <div className="steps" id="steps">
-            <div className="step"><div className="step-line"></div><div className="step-n">01</div><div><div className="step-name">Connect your channel</div><p className="step-desc">Link your YouTube channel in seconds. Vyron immediately builds your analytics baseline with full historical data.</p></div></div>
-            <div className="step"><div className="step-line"></div><div className="step-n">02</div><div><div className="step-name">Scan your niche</div><p className="step-desc">Trend Radar continuously monitors your niche for viral momentum, identifying content patterns before they peak.</p></div></div>
-            <div className="step"><div className="step-line"></div><div className="step-n">03</div><div><div className="step-name">Map the competition</div><p className="step-desc">Competitor Matrix identifies rivals and analyzes their Content DNA, growth velocity, and efficiency metrics vs yours.</p></div></div>
-            <div className="step"><div className="step-line"></div><div className="step-n">04</div><div><div className="step-name">Act on insights</div><p className="step-desc">Save ideas to Library, receive automated email reports, and act on AI Quick Wins before competitors do.</p></div></div>
+        {/* Browser wrapper mockup */}
+        <div className="w-full rounded-2xl border border-zinc-800/80 bg-zinc-950/80 shadow-[0_30px_70px_rgba(0,0,0,0.8)] overflow-hidden">
+          <DemoDashboard />
+        </div>
+      </section>
+
+      {/* ── INTERACTIVE NICHE RADAR TERMINAL ── */}
+      <section id="scanner" className="relative z-10 py-16 px-4 md:px-8 max-w-7xl mx-auto scroll-mt-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          {/* Info Column */}
+          <div className="lg:col-span-5 text-left">
+            <div className="inline-flex items-center gap-2 bg-brand-volt/10 border border-brand-volt/20 px-3.5 py-1.5 rounded-full mb-4">
+              <Terminal className="w-3.5 h-3.5 text-brand-volt" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-brand-volt">Automated Scraper</span>
+            </div>
+            <h2 className="font-display font-extrabold text-3.5xl md:text-4.5xl tracking-tight text-white mb-4">
+              Trigger a Live Niche Analysis
+            </h2>
+            <p className="text-zinc-400 text-sm leading-relaxed mb-6 font-normal">
+              Select a content vertical and trigger our simulated automated analysis engine. Watch how Vyron maps keywords, scores virality metrics, and produces content recommendations in real time.
+            </p>
+
+            {/* Niche selectors */}
+            <div className="space-y-3 mb-8">
+              <label className="text-[10px] font-extrabold uppercase text-zinc-500 tracking-wider">Choose target niche:</label>
+              <div className="grid grid-cols-2 gap-2">
+                {['SaaS & Tech', 'Finance & Crypto', 'Gaming & Tech', 'Fitness & Lifestyle'].map((niche) => (
+                  <button
+                    key={niche}
+                    onClick={() => {
+                      setTerminalNiche(niche);
+                      setScanResultReady(false);
+                      setTerminalLogs([`Niche changed to "${niche}". Ready to scan.`]);
+                    }}
+                    className={`px-4 py-2.5 rounded-xl font-bold text-[11px] uppercase tracking-wider text-left transition-all border ${
+                      terminalNiche === niche
+                        ? 'bg-brand-volt text-black border-brand-volt shadow-[0_0_15px_rgba(200,241,53,0.15)] font-black'
+                        : 'bg-zinc-950/40 text-zinc-400 border-zinc-800/60 hover:border-zinc-700 hover:text-white'
+                    }`}
+                  >
+                    {niche}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Run Button */}
+            <button
+              onClick={runNicheScanner}
+              disabled={isScanning}
+              className={`w-full py-4 rounded-xl text-sm font-extrabold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                isScanning
+                  ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-transparent'
+                  : 'bg-white text-black hover:bg-zinc-200 shadow-xl hover:-translate-y-0.5'
+              }`}
+            >
+              {isScanning ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" /> Scanning Database...
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4 fill-black" /> Run Scraper Command
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Terminal Console Column */}
+          <div className="lg:col-span-7">
+            <div className="w-full rounded-2xl border border-zinc-800/70 bg-zinc-950/90 shadow-[0_20px_50px_rgba(0,0,0,0.7)] font-mono overflow-hidden">
+              {/* Console header */}
+              <div className="flex items-center justify-between bg-zinc-900 px-4 py-3 border-b border-zinc-800">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                </div>
+                <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                  vyron-scraper-v3.0.sh
+                </span>
+                <div className="w-8" />
+              </div>
+
+              {/* Console logs */}
+              <div className="p-5 h-[230px] overflow-y-auto text-[11px] leading-relaxed text-zinc-400 space-y-1.5 scroll-smooth border-b border-zinc-900">
+                {terminalLogs.map((log, index) => {
+                  let colorClass = "text-zinc-400";
+                  if (log.includes("[SUCCESS]")) colorClass = "text-brand-mint font-bold";
+                  if (log.includes("[ERROR]")) colorClass = "text-brand-rose font-bold";
+                  if (log.includes("Initializing")) colorClass = "text-brand-volt font-bold";
+                  
+                  return (
+                    <div key={index} className="flex gap-2 items-start">
+                      <span className="text-zinc-600 select-none">$</span>
+                      <span className={colorClass}>{log}</span>
+                    </div>
+                  );
+                })}
+                {isScanning && (
+                  <div className="flex items-center gap-2 text-brand-volt font-bold">
+                    <span className="text-zinc-600 select-none">$</span>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Processing parameters...</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Scan Results Panel */}
+              <div className="p-5 bg-black/40 min-h-[140px] flex items-center justify-center text-center">
+                {!scanResultReady && !isScanning && (
+                  <div className="text-zinc-600 flex flex-col items-center gap-2">
+                    <AlertCircle className="w-7 h-7 stroke-1" />
+                    <p className="text-xs uppercase font-extrabold tracking-wider">No active scan logs</p>
+                  </div>
+                )}
+                
+                {isScanning && (
+                  <div className="text-brand-volt flex flex-col items-center gap-2 animate-pulse">
+                    <RefreshCw className="w-7 h-7 animate-spin" />
+                    <p className="text-xs uppercase font-extrabold tracking-wider">Compiling metrics...</p>
+                  </div>
+                )}
+
+                {scanResultReady && scanResultData && (
+                  <div className="w-full text-left space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h4 className="text-[10px] font-black uppercase text-brand-mint tracking-wider flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-brand-mint" /> Scraper Scan Complete
+                      </h4>
+                      <span className="text-[9px] font-mono text-zinc-500">Emerging trends parsed</span>
+                    </div>
+                    
+                    {/* Rendered trends */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
+                      {scanResultData.trends && scanResultData.trends.map((tr, i) => (
+                        <div key={i} className="bg-zinc-900/60 border border-zinc-800 p-3 rounded-xl">
+                          <p className="font-bold text-white mb-1 truncate">{tr.topic}</p>
+                          <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 pt-1">
+                            <span>Viral Score: <strong className="text-brand-volt font-bold">{tr.score}</strong></span>
+                            <span>Views: <strong className="text-white">{tr.estViews}</strong></span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Quick win suggestion */}
+                    {scanResultData.wins && scanResultData.wins.length > 0 && (
+                      <div className="border-t border-zinc-900 pt-3 flex gap-2 items-start bg-brand-volt/[0.02] p-2.5 rounded-lg border border-brand-volt/10">
+                        <div className="text-brand-volt shrink-0 mt-0.5">🏆</div>
+                        <div>
+                          <p className="text-[10px] font-extrabold uppercase text-brand-volt tracking-wider">Quick Win blueprint</p>
+                          <p className="text-xs text-zinc-300 font-medium mb-0.5">{scanResultData.wins[0].title}</p>
+                          <p className="text-[10px] text-zinc-500 italic">"{scanResultData.wins[0].why}"</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* ── PRICING ── */}
-      <div className="section">
-        <div className="section-eyebrow sr">Pricing</div>
-        <h2 className="section-h sr sr-d1">One plan. <em>Total access.</em><br/><span className="stroke-text">No limits.</span></h2>
-        <p className="section-sub sr sr-d2">7 days free — no card needed. Cancel anytime. Powered by Razorpay.</p>
+      {/* ── CORE CAPABILITIES (FEATURES GRID) ── */}
+      <section id="features" className="relative z-10 py-24 px-4 md:px-8 max-w-7xl mx-auto scroll-mt-20">
+        {/* Title */}
+        <div className="max-w-3xl mb-16 text-left">
+          <div className="inline-flex items-center gap-2 bg-brand-volt/10 border border-brand-volt/20 px-3.5 py-1.5 rounded-full mb-4">
+            <Cpu className="w-3.5 h-3.5 text-brand-volt" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-brand-volt">Power Capabilities</span>
+          </div>
+          <h2 className="font-display font-extrabold text-4xl md:text-5xl tracking-tight text-white mb-6">
+            Engineered for channels<br/>that play to <em className="text-brand-volt not-italic text-glow-volt">win</em>
+          </h2>
+          <p className="text-zinc-400 text-sm md:text-base leading-relaxed max-w-lg">
+            Vyron provides advanced metrics and machine-learning scoring mechanisms to filter high-velocity content, track rival matrices, and maintain your growth speed.
+          </p>
+        </div>
 
-        <div className="pricing-wrap sr sr-d2">
-          <div className="offer-banner">
-            <div className="offer-left">
-              <div className="offer-tag">VERSION 3 OFFER</div>
+        {/* Feature Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Card 1 */}
+          <div className="interactive-card group relative p-8 rounded-3xl bg-zinc-950/60 border border-zinc-900 hover:border-zinc-800 transition-all duration-300 hover:-translate-y-1">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-volt/2 rounded-bl-full pointer-events-none group-hover:bg-brand-volt/5 transition-all duration-500" />
+            <span className="font-mono text-[9px] font-extrabold text-zinc-600 group-hover:text-brand-volt transition-colors uppercase tracking-widest block mb-4">01 // TRACKING</span>
+            <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xl mb-6 group-hover:border-brand-volt/30 group-hover:bg-zinc-950 transition-colors">
+              <BarChart3 className="w-5 h-5 text-brand-volt" />
+            </div>
+            <h3 className="font-display font-bold text-lg text-white mb-3">Analytics & Tracking</h3>
+            <p className="text-zinc-400 text-xs leading-relaxed mb-6 font-normal">
+              Capture automated daily snapshots of subscribers, view velocity, and uploading ratios. Run predictive scaling formulas to project milestones.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {['Historical', 'Predictions', 'Milestones'].map(t => (
+                <span key={t} className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 border border-zinc-800/80 px-2 py-0.5 rounded bg-zinc-950/40 group-hover:border-zinc-800">{t}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Card 2 */}
+          <div className="interactive-card group relative p-8 rounded-3xl bg-zinc-950/60 border border-zinc-900 hover:border-zinc-800 transition-all duration-300 hover:-translate-y-1">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-mint/2 rounded-bl-full pointer-events-none group-hover:bg-brand-mint/5 transition-all duration-500" />
+            <span className="font-mono text-[9px] font-extrabold text-zinc-600 group-hover:text-brand-mint transition-colors uppercase tracking-widest block mb-4">02 // DISCOVERY</span>
+            <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xl mb-6 group-hover:border-brand-mint/30 group-hover:bg-zinc-950 transition-colors">
+              <Zap className="w-5 h-5 text-brand-mint" />
+            </div>
+            <h3 className="font-display font-bold text-lg text-white mb-3">Trend Radar</h3>
+            <p className="text-zinc-400 text-xs leading-relaxed mb-6 font-normal">
+              Scours niche tags, queries, and titles every hour. Identifies search metrics spikes and prompts you with actionable Quick Wins content scripts.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {['Real-time', 'AI Prompts', 'Viral Hooks'].map(t => (
+                <span key={t} className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 border border-zinc-800/80 px-2 py-0.5 rounded bg-zinc-950/40 group-hover:border-zinc-800">{t}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Card 3 */}
+          <div className="interactive-card group relative p-8 rounded-3xl bg-zinc-950/60 border border-zinc-900 hover:border-zinc-800 transition-all duration-300 hover:-translate-y-1">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-rose/2 rounded-bl-full pointer-events-none group-hover:bg-brand-rose/5 transition-all duration-500" />
+            <span className="font-mono text-[9px] font-extrabold text-zinc-600 group-hover:text-brand-rose transition-colors uppercase tracking-widest block mb-4">03 // INTEL</span>
+            <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xl mb-6 group-hover:border-brand-rose/30 group-hover:bg-zinc-950 transition-colors">
+              <Users className="w-5 h-5 text-brand-rose" />
+            </div>
+            <h3 className="font-display font-bold text-lg text-white mb-3">Competitor Matrix</h3>
+            <p className="text-zinc-400 text-xs leading-relaxed mb-6 font-normal">
+              Profile direct rivals and sector speed leaders. Deep-dive into competitor upload frequency, view efficiency ratios, and content tags.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {['Content DNA', 'Speed Matrix', 'Benchmarks'].map(t => (
+                <span key={t} className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 border border-zinc-800/80 px-2 py-0.5 rounded bg-zinc-950/40 group-hover:border-zinc-800">{t}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Card 4 */}
+          <div className="interactive-card group relative p-8 rounded-3xl bg-zinc-950/60 border border-zinc-900 hover:border-zinc-800 transition-all duration-300 hover:-translate-y-1">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-rose/2 rounded-bl-full pointer-events-none group-hover:bg-brand-rose/5 transition-all duration-500" />
+            <span className="font-mono text-[9px] font-extrabold text-zinc-600 group-hover:text-brand-rose transition-colors uppercase tracking-widest block mb-4">04 // PARSING</span>
+            <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xl mb-6 group-hover:border-brand-rose/30 group-hover:bg-zinc-950 transition-colors">
+              <Search className="w-5 h-5 text-brand-rose" />
+            </div>
+            <h3 className="font-display font-bold text-lg text-white mb-3">Advanced Search</h3>
+            <p className="text-zinc-400 text-xs leading-relaxed mb-6 font-normal">
+              Filters video uploads by locale, length, and timestamp. Sort directly by our custom virality score to separate core content patterns from anomalies.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {['Virality Rank', 'Growth Factor', 'Precision'].map(t => (
+                <span key={t} className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 border border-zinc-800/80 px-2 py-0.5 rounded bg-zinc-950/40 group-hover:border-zinc-800">{t}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Card 5 */}
+          <div className="interactive-card group relative p-8 rounded-3xl bg-zinc-950/60 border border-zinc-900 hover:border-zinc-800 transition-all duration-300 hover:-translate-y-1">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-volt/2 rounded-bl-full pointer-events-none group-hover:bg-brand-volt/5 transition-all duration-500" />
+            <span className="font-mono text-[9px] font-extrabold text-zinc-600 group-hover:text-brand-volt transition-colors uppercase tracking-widest block mb-4">05 // ARCHIVE</span>
+            <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xl mb-6 group-hover:border-brand-volt/30 group-hover:bg-zinc-950 transition-colors">
+              <BookOpen className="w-5 h-5 text-brand-volt" />
+            </div>
+            <h3 className="font-display font-bold text-lg text-white mb-3">Research Library</h3>
+            <p className="text-zinc-400 text-xs leading-relaxed mb-6 font-normal">
+              Save trends, competitor logs, and keyword groupings. Write script structures and scripts inside our markdown editor module.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {['Saved Notes', 'Blueprints', 'Editor Mode'].map(t => (
+                <span key={t} className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 border border-zinc-800/80 px-2 py-0.5 rounded bg-zinc-950/40 group-hover:border-zinc-800">{t}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Card 6 */}
+          <div className="interactive-card group relative p-8 rounded-3xl bg-zinc-950/60 border border-zinc-900 hover:border-zinc-800 transition-all duration-300 hover:-translate-y-1">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-mint/2 rounded-bl-full pointer-events-none group-hover:bg-brand-mint/5 transition-all duration-500" />
+            <span className="font-mono text-[9px] font-extrabold text-zinc-600 group-hover:text-brand-mint transition-colors uppercase tracking-widest block mb-4">06 // INFRA</span>
+            <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xl mb-6 group-hover:border-brand-mint/30 group-hover:bg-zinc-950 transition-colors">
+              <Cpu className="w-5 h-5 text-brand-mint" />
+            </div>
+            <h3 className="font-display font-bold text-lg text-white mb-3">AI Infrastructure</h3>
+            <p className="text-zinc-400 text-xs leading-relaxed mb-6 font-normal">
+              Utilizes semantic indexing inside Zilliz/Milvus vector databases. Runs background cron indexing and triggers automated digests to your email inbox via Resend.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {['Vector Search', 'Cron indexing', 'Email Reports'].map(t => (
+                <span key={t} className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 border border-zinc-800/80 px-2 py-0.5 rounded bg-zinc-950/40 group-hover:border-zinc-800">{t}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── METALLIC PRICING (HIGH CONVERTING SaaS CARD) ── */}
+      <section id="pricing" className="relative z-10 py-20 px-4 md:px-8 max-w-5xl mx-auto scroll-mt-20">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 bg-brand-volt/10 border border-brand-volt/20 px-3.5 py-1.5 rounded-full mb-4">
+            <Star className="w-3.5 h-3.5 text-brand-volt fill-brand-volt" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-brand-volt">Early Pricing</span>
+          </div>
+          <h2 className="font-display font-extrabold text-4xl md:text-5xl tracking-tight text-white mb-4">
+            Get Complete Access. Locked Pricing.
+          </h2>
+          <p className="text-zinc-400 text-sm leading-relaxed max-w-sm mx-auto">
+            7 days trial. Razorpay integration for billing setups. Cancel subscription anytime with one click.
+          </p>
+
+
+        </div>
+
+        {/* early adopter banner */}
+        <div className="rounded-3xl border border-zinc-800/80 bg-zinc-950/40 backdrop-blur-md overflow-hidden relative mb-6">
+          <div className="p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="flex items-start md:items-center gap-4">
+              <span className="bg-brand-rose text-white text-[9px] font-black tracking-widest px-2.5 py-1 rounded">VERSION 3 OFFER</span>
               <div>
-                <div className="offer-text">🎉 Early adopter — 50% off for life</div>
-                <div className="offer-sub">Lock in ₹499/mo before this offer expires. Never pay more.</div>
+                <h3 className="font-display font-extrabold text-lg text-white">50% off for life for first 500 members</h3>
+                <p className="text-xs text-zinc-500 mt-0.5">Secure early adopter status. Price will never raise for your account.</p>
               </div>
             </div>
-            <div className="offer-countdown">
-              <div className="offer-count-label">Offer ends in</div>
-              <div className="timer">
-                <div className="time-block"><div className="time-num" id="th">00</div><div className="time-label">HRS</div></div>
-                <div className="time-sep">:</div>
-                <div className="time-block"><div className="time-num" id="tm">00</div><div className="time-label">MIN</div></div>
-                <div className="time-sep">:</div>
-                <div className="time-block"><div className="time-num" id="ts">00</div><div className="time-label">SEC</div></div>
+
+            {/* Countdown timer */}
+            <div className="flex items-center gap-3 bg-zinc-950 border border-zinc-900 p-3 rounded-2xl shrink-0">
+              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Ends in:</span>
+              <div className="flex items-center gap-1 font-mono font-bold text-sm text-brand-volt">
+                <span>{String(timeLeft.hours).padStart(2, '0')}</span>
+                <span className="opacity-40 animate-pulse">:</span>
+                <span>{String(timeLeft.minutes).padStart(2, '0')}</span>
+                <span className="opacity-40 animate-pulse">:</span>
+                <span>{String(timeLeft.seconds).padStart(2, '0')}</span>
               </div>
             </div>
           </div>
+        </div>
 
-          <div className="pricing-card">
-            <div className="price-left">
-              <div className="price-tier"><span className="tier-dot"></span>Pro — Everything Included</div>
-              <div className="price-was">
-                <span className="was-amt">₹999/mo</span>
-                <span className="save-badge">SAVE 50%</span>
+        {/* Pricing Card */}
+        <div className="rounded-3xl border border-brand-volt/20 bg-zinc-950/70 backdrop-blur-md overflow-hidden relative grid grid-cols-1 md:grid-cols-12 gap-8 p-8 md:p-12 shadow-[0_30px_60px_rgba(0,0,0,0.8),0_0_50px_rgba(200,241,53,0.02)]">
+          {/* Top highlight bar */}
+          <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-brand-volt to-brand-mint" />
+          
+          {/* Left Pricing Panel */}
+          <div className="md:col-span-6 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-2 text-brand-volt font-black uppercase text-[10px] tracking-widest mb-6">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-volt" /> Pro Tier Plan
               </div>
-              <div className="price-amount">
-                <span className="price-currency">₹</span>
-                <span className="price-num" id="priceNum">499</span>
-                <span className="price-period">/mo</span>
+              
+              <div className="flex items-baseline gap-1.5 mb-2">
+                <span className="font-display font-extrabold text-3xl text-zinc-500">₹</span>
+                <span className="font-display font-extrabold text-6xl md:text-7.5xl text-white tracking-tighter transition-all">
+                  {priceDisplay}
+                </span>
+                <span className="font-mono text-zinc-500 text-xs font-bold">/ month</span>
               </div>
-              <div className="price-trial">7 days free · no card required to start</div>
-              <button className="btn-pricing">Start Free Trial →</button>
-              <div className="price-note">Then ₹499/mo · cancel anytime · Razorpay secure</div>
+
+              {/* strike price */}
+              <div className="flex items-center gap-2 mb-6">
+                <span className="text-zinc-500 line-through text-sm font-bold">₹999/mo</span>
+                <span className="bg-brand-rose/15 text-brand-rose border border-brand-rose/25 font-black text-[9px] px-2 py-0.5 rounded tracking-wide uppercase">SAVE 50%</span>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs font-extrabold text-brand-mint mb-8">
+                <Check className="w-4 h-4" /> 7 days free trial · no payment card required
+              </div>
             </div>
-            <div className="price-right">
-              <ul className="feat-list" id="featList">
-                <li className="feat-item"><span className="feat-check">→</span> Real-time Trend Radar + Quick Wins</li>
-                <li className="feat-item"><span className="feat-check">→</span> Full Competitor Matrix & Content DNA</li>
-                <li className="feat-item"><span className="feat-check">→</span> AI growth projections & milestone tracking</li>
-                <li className="feat-item"><span className="feat-check">→</span> Advanced search with virality sorting</li>
-                <li className="feat-item"><span className="feat-check">→</span> Historical analytics & daily snapshots</li>
-                <li className="feat-item"><span className="feat-check">→</span> Unlimited research library & notes</li>
-                <li className="feat-item"><span className="feat-check">→</span> Automated email trend reports</li>
-                <li className="feat-item"><span className="feat-check">→</span> Vector semantic search (Milvus)</li>
-                <li className="feat-item"><span className="feat-check">→</span> Video performance "Hot" detection</li>
-                <li className="feat-item"><span className="feat-check">→</span> All future features included free</li>
-              </ul>
+
+            <div>
+              <button className="w-full py-4.5 bg-brand-volt hover:bg-[#d6fb3a] text-black font-extrabold text-sm uppercase tracking-wider rounded-2xl transition-all shadow-[0_0_35px_rgba(200,241,53,0.3)] hover:shadow-[0_0_50px_rgba(200,241,53,0.55)] hover:-translate-y-0.5">
+                Start 7-Day Free Trial
+              </button>
+              <p className="text-[10px] text-zinc-500 text-center mt-3 font-semibold tracking-wide">
+                Then ₹499/mo · Cancel subscription anytime · Powered by Razorpay secure checkout
+              </p>
+            </div>
+          </div>
+
+          {/* Right Features List Panel */}
+          <div className="md:col-span-6 border-t md:border-t-0 md:border-l border-zinc-900 pt-8 md:pt-0 md:pl-8 flex flex-col justify-center">
+            <ul className="space-y-3.5 text-xs text-zinc-300">
+              {[
+                "Real-time Trend Radar + Quick Wins prompts",
+                "Competitor Matrix & Content DNA tracking profiles",
+                "Growth vector projections & milestone calculations",
+                "YouTube search sorts by custom Virality Score",
+                "Daily stats snapshot tracking & historical log archives",
+                "Unlimited research notebook slots & strategy blueprints",
+                "Background scraper indexing & automated Resend digests",
+                "Vector database semantic scanning (Zilliz/Milvus)",
+                "Support for all futuras additions without cost increases"
+              ].map((feat, idx) => (
+                <li key={idx} className="flex items-start gap-3">
+                  <span className="text-brand-volt font-bold shrink-0 mt-0.5">→</span>
+                  <span className="font-normal">{feat}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ ACCORDION SECTION (NEW STUNNING WIDGET) ── */}
+      <section className="relative z-10 py-16 px-4 md:px-8 max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 bg-brand-mint/10 border border-brand-mint/20 px-3.5 py-1.5 rounded-full mb-4">
+            <HelpCircle className="w-3.5 h-3.5 text-brand-mint" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-brand-mint">Common Questions</span>
+          </div>
+          <h2 className="font-display font-extrabold text-3.5xl md:text-4.5xl tracking-tight text-white mb-4">
+            Frequently Asked Queries
+          </h2>
+          <p className="text-zinc-400 text-sm leading-relaxed max-w-sm mx-auto">
+            Everything you need to know about the Vyron system, indexes, and account configs.
+          </p>
+        </div>
+
+        {/* FAQs */}
+        <div className="space-y-3">
+          {[
+            {
+              q: "What is Vyron Intelligence and how does it function?",
+              a: "Vyron is a multi-parameter channel analysis dashboard. It tracks channel data, indexes competitor videos in vector spaces via Zilliz/Milvus databases, and runs scoring formulas to isolate real content patterns from search noise."
+            },
+            {
+              q: "Must I link my YouTube/Google account to use it?",
+              a: "Linking is entirely optional. You can connect your channel via read-only APIs to unlock automated growth projection tools, or run the system isolated for market trends research and rival channel tracking."
+            },
+            {
+              q: "What is the Trend Radar?",
+              a: "The Trend Radar is our hourly scraping cron job. It scans targeted keywords, metrics, and tags across your vertical to record early keyword spikes, then translates them into video ideas and hook recommendations."
+            },
+            {
+              q: "How does the 7-day trial and billing cancelation behave?",
+              a: "Your trial lasts 7 days with zero initial credit card billing. If you proceed, Razorpay billing triggers at ₹499/mo (or ₹399/mo yearly). You can cancel from your billing portal with one click anytime."
+            }
+          ].map((faq, idx) => {
+            const isOpen = openFaq === idx;
+            return (
+              <div 
+                key={idx}
+                className="rounded-2xl border border-zinc-900 bg-zinc-950/40 overflow-hidden transition-all duration-300 hover:border-zinc-800"
+              >
+                <button
+                  onClick={() => setOpenFaq(isOpen ? null : idx)}
+                  className="w-full p-5 flex items-center justify-between gap-4 text-left transition-colors hover:text-white"
+                >
+                  <span className="font-display font-bold text-sm md:text-base text-zinc-100">{faq.q}</span>
+                  <ChevronDown className={`w-4 h-4 text-zinc-500 transition-transform duration-300 shrink-0 ${isOpen ? 'rotate-180 text-brand-volt' : ''}`} />
+                </button>
+                
+                <div 
+                  className="transition-all duration-300 ease-in-out overflow-hidden"
+                  style={{ maxHeight: isOpen ? '200px' : '0' }}
+                >
+                  <p className="px-5 pb-5 pt-1 text-xs md:text-sm text-zinc-400 leading-relaxed border-t border-zinc-950/50">
+                    {faq.a}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ── BOTTOM CALL TO ACTION ── */}
+      <section className="relative z-10 py-16 px-4 md:px-8 max-w-7xl mx-auto">
+        <div className="rounded-3xl border border-zinc-900 bg-zinc-950/40 backdrop-blur-md p-10 md:p-16 text-center relative overflow-hidden shadow-[0_30px_70px_rgba(0,0,0,0.9)]">
+          {/* Decorative glows */}
+          <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 w-96 h-96 bg-brand-volt/5 rounded-full filter blur-[80px] pointer-events-none" />
+          
+          {/* Huge watermark text */}
+          <div className="absolute font-display font-black text-white/[0.015] text-8xl md:text-[160px] leading-none tracking-tighter select-none pointer-events-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 uppercase">
+            VYRON
+          </div>
+
+          <div className="relative z-10 max-w-xl mx-auto">
+            <span className="text-[10px] font-black uppercase tracking-widest text-brand-volt mb-4 block">DOMINATE YOUR VERTICAL</span>
+            <h2 className="font-display font-extrabold text-3.5xl md:text-5xl tracking-tight text-white mb-6">
+              Your niche is moving.<br/>Stop lagging.
+            </h2>
+            <p className="text-zinc-400 text-sm leading-relaxed mb-10 font-normal">
+              Every hour without trend scraping is another hour competitors gain margins. Start tracking today.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <a 
+                href="#pricing"
+                className="w-full sm:w-auto px-8 py-4 bg-brand-volt hover:bg-[#d6fb3a] text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_25px_rgba(200,241,53,0.15)] text-center"
+              >
+                Start 7-Day Trial Free
+              </a>
+              <a 
+                href="#features"
+                className="w-full sm:w-auto px-8 py-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all text-center"
+              >
+                Read Capabilities list
+              </a>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* ── CTA ── */}
-      <div className="cta-wrap sr">
-        <div className="cta-ghost-text">VYRON</div>
-        <div className="cta-eyebrow">Ready to dominate</div>
-        <h2 className="cta-title">Your niche won't<br/>wait for you.</h2>
-        <p className="cta-desc">Every hour without Vyron is an hour your competitors are finding the trends you're missing. Start free today.</p>
-        <div className="cta-actions">
-          <button className="btn-primary">Start 7-Day Free Trial →</button>
-          <button className="btn-ghost" style={{color: 'var(--muted)'}}>View all features <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
-        </div>
-      </div>
+      </section>
 
       {/* ── FOOTER ── */}
-      <footer>
-        <div className="footer-logo">Vyron Intelligence</div>
-        <div className="footer-links">
-          <a href="#">Privacy</a><a href="#">Terms</a><a href="#">Docs</a><a href="#">Support</a>
+      <footer className="relative z-10 border-t border-zinc-900/80 bg-zinc-950/40 backdrop-blur-md py-16 px-4 md:px-8 mt-20">
+        <div className="max-w-5xl mx-auto">
+          {/* Top Section */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-12">
+            {/* Brand Column */}
+            <div className="md:col-span-7 flex flex-col items-start gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-brand-volt via-[#dff453] to-brand-mint p-[1px] shadow-[0_0_15px_rgba(200,241,53,0.15)]">
+                  <div className="w-full h-full bg-black rounded-[7px] flex items-center justify-center">
+                    <Sparkles className="w-3.5 h-3.5 text-brand-volt" />
+                  </div>
+                </div>
+                <span className="font-display font-extrabold text-base text-white tracking-tight">VYRON</span>
+              </div>
+              <p className="text-zinc-500 text-xs leading-relaxed max-w-sm">
+                Continuously scanning competitor content, scoring emerging velocity indicators, and parsing vector data to secure your channel's growth.
+              </p>
+              {/* Status Indicator */}
+              <div className="inline-flex items-center gap-2 bg-zinc-900/50 border border-zinc-800/80 px-3 py-1 rounded-full text-[9px] font-mono font-bold text-brand-mint mt-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-mint animate-pulse" />
+                ALL SYSTEMS OPERATIONAL
+              </div>
+            </div>
+
+            {/* Links Column */}
+            <div className="md:col-span-5 flex flex-col md:items-end justify-start gap-6">
+              <div className="flex flex-wrap md:justify-end gap-x-8 gap-y-4 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                <a href="#features" className="hover:text-brand-volt transition-colors">Features</a>
+                <a href="#demo" className="hover:text-brand-volt transition-colors">Live Demo</a>
+                <a href="#scanner" className="hover:text-brand-volt transition-colors">Radar Terminal</a>
+                <a href="#pricing" className="hover:text-brand-volt transition-colors">Pricing</a>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Divider & Copyright */}
+          <div className="border-t border-zinc-900/80 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-[9px] font-mono text-zinc-600 font-bold uppercase tracking-widest">
+              © 2026 Vyron Intelligence Platform. All rights reserved.
+            </p>
+            <a 
+              href="#" 
+              className="text-[9px] font-mono text-zinc-500 hover:text-white uppercase tracking-widest font-bold flex items-center gap-1 transition-colors"
+            >
+              Back to top ↑
+            </a>
+          </div>
         </div>
-        <div className="footer-copy">© 2025 Vyron Intelligence</div>
       </footer>
-    </>
+    </div>
   );
 }
