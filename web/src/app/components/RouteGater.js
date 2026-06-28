@@ -17,15 +17,20 @@ export default function RouteGater({ children, initialIsSubscribed, initialSubsc
     setIsDemoMode(document.cookie.includes("demo_mode=true"));
   }, [pathname]); // Refresh demo cookie detection on route transition
 
+  const isPublicPage = pathname.startsWith("/sign-in") || 
+                       pathname.startsWith("/docs") ||
+                       pathname.startsWith("/privacy") ||
+                       pathname.startsWith("/terms") ||
+                       pathname.startsWith("/cookies") ||
+                       pathname.startsWith("/refund");
+
   if (!isLoaded) {
     // Still render public pages while Clerk is loading to avoid blank screen
-    if (pathname.startsWith("/sign-in") || pathname.startsWith("/docs")) {
+    if (isPublicPage) {
       return <div className="w-full text-[#ededed]">{children}</div>;
     }
     return <div className="min-h-screen bg-black" />;
   }
-
-  const isPublicPage = pathname.startsWith("/sign-in") || pathname.startsWith("/docs");
 
   if (isDemoMode) {
     if (isPublicPage) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
+import { motion, useInView } from 'framer-motion';
 import { 
   Zap, Target, TrendingUp, Search, Cpu, ArrowRight, Check, Play, Sparkles, 
   Clock, Star, ArrowUpRight, HelpCircle, ChevronDown, Monitor, 
@@ -9,6 +10,44 @@ import {
 } from 'lucide-react';
 import { SignIn } from '@clerk/nextjs';
 import DemoLoginButton from './DemoLoginButton';
+
+// Reusable scroll-reveal wrapper
+const RevealOnScroll = ({ children, delay = 0 }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: '-80px' });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 40 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+// Animated number counter component
+const AnimatedCounter = ({ target, suffix = '', duration = 1500 }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: '-40px' });
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!isInView) return;
+    let startTime = null;
+    const animate = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.round(target * ease));
+      if (progress < 1) requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+  }, [isInView, target, duration]);
+
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
+};
 
 export default function LandingPage() {
   
@@ -38,6 +77,16 @@ export default function LandingPage() {
   
   // Countdown Timer states
   const [timeLeft, setTimeLeft] = useState({ hours: 23, minutes: 47, seconds: 12 });
+
+  // Typing effect for hero badge
+  const badgePhrases = ['Real-Time Creator Intelligence', 'AI-Powered Trend Detection', 'Competitor Analysis Engine'];
+  const [badgeText, setBadgeText] = useState('');
+  const [phraseIdx, setPhraseIdx] = useState(0);
+  const [charIdx, setCharIdx] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Parallax scroll state
+  const [scrollY, setScrollY] = useState(0);
 
   // Refs for tilt card
   const heroCardRef = useRef(null);
@@ -104,14 +153,40 @@ export default function LandingPage() {
     return () => cancelAnimationFrame(animId);
   }, [mousePos, isMobile]);
 
-  // Navigation scroll listener
+  // Navigation scroll listener + parallax
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 40);
+      setScrollY(window.scrollY);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Typing effect cycle
+  useEffect(() => {
+    const currentPhrase = badgePhrases[phraseIdx];
+    const speed = isDeleting ? 30 : 60;
+
+    if (!isDeleting && charIdx === currentPhrase.length) {
+      // Pause at end of phrase
+      const timeout = setTimeout(() => setIsDeleting(true), 1800);
+      return () => clearTimeout(timeout);
+    }
+
+    if (isDeleting && charIdx === 0) {
+      setIsDeleting(false);
+      setPhraseIdx((prev) => (prev + 1) % badgePhrases.length);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      setCharIdx((prev) => prev + (isDeleting ? -1 : 1));
+      setBadgeText(currentPhrase.substring(0, charIdx + (isDeleting ? -1 : 1)));
+    }, speed);
+
+    return () => clearTimeout(timeout);
+  }, [charIdx, isDeleting, phraseIdx]);
 
   // Countdown timer handler
   useEffect(() => {
@@ -175,7 +250,7 @@ export default function LandingPage() {
           vx: (Math.random() - 0.5) * 0.3,
           vy: (Math.random() - 0.5) * 0.3,
           r: Math.random() * 1.5 + 0.5,
-          color: Math.random() < 0.7 ? '200, 241, 53' : '61, 255, 192', // Volt or Mint
+          color: Math.random() < 0.7 ? '0, 240, 255' : '0, 82, 255', // Cyan or Blue
           alpha: Math.random() * 0.2 + 0.05
         });
       }
@@ -215,7 +290,7 @@ export default function LandingPage() {
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(p2.x, p2.y);
             const connectionAlpha = 0.08 * (1 - dist / 130);
-            ctx.strokeStyle = `rgba(200, 241, 53, ${connectionAlpha})`;
+            ctx.strokeStyle = `rgba(0, 240, 255, ${connectionAlpha})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }
@@ -356,7 +431,7 @@ export default function LandingPage() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-volt opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-volt"></span>
             </span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-brand-volt">Real-Time Creator Intelligence</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-brand-volt">{badgeText}<span className="animate-pulse">|</span></span>
           </div>
 
           {/* Main Title */}
@@ -392,7 +467,7 @@ export default function LandingPage() {
           {/* Quick Stats banner */}
           <div className="mt-8 md:mt-4 lg:mt-6 xl:mt-12 pt-6 md:pt-3 lg:pt-4 xl:pt-8 border-t border-zinc-900 w-full grid grid-cols-3 gap-4 md:gap-2 lg:gap-3 xl:gap-6 text-left">
             <div>
-              <p className="font-mono text-xl md:text-base lg:text-lg xl:text-2xl font-bold text-white tracking-tight">48K+</p>
+              <p className="font-mono text-xl md:text-base lg:text-lg xl:text-2xl font-bold text-white tracking-tight"><AnimatedCounter target={48} suffix="K+" /></p>
               <p className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider font-bold">High-Growth Channels Monitored</p>
             </div>
             <div>
@@ -400,7 +475,7 @@ export default function LandingPage() {
               <p className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Breakout Trend Scans</p>
             </div>
             <div>
-              <p className="font-mono text-xl md:text-base lg:text-lg xl:text-2xl font-bold text-white tracking-tight">50+</p>
+              <p className="font-mono text-xl md:text-base lg:text-lg xl:text-2xl font-bold text-white tracking-tight"><AnimatedCounter target={50} suffix="+" /></p>
               <p className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Content Niches Tracked</p>
             </div>
           </div>
@@ -502,7 +577,10 @@ export default function LandingPage() {
           </div>
 
           {/* Layered floating metric badge 1 (Top-Right) - visible on lg screens and up */}
-          <div className="hidden lg:flex items-center gap-2.5 p-3 rounded-full bg-zinc-950/90 border border-brand-volt/20 shadow-[0_15px_30px_rgba(0,0,0,0.8)] absolute -top-6 lg:-right-2 xl:-right-16 scale-90 xl:scale-100 z-25 backdrop-blur-md transition-all duration-300 hover:-translate-y-1">
+          <div 
+            className="hidden lg:flex items-center gap-2.5 p-3 rounded-full bg-zinc-950/90 border border-brand-volt/20 shadow-[0_15px_30px_rgba(0,0,0,0.8)] absolute -top-6 lg:-right-2 xl:-right-16 scale-90 xl:scale-100 z-25 backdrop-blur-md transition-all duration-300 hover:-translate-y-1"
+            style={{ transform: `translateY(${scrollY * -0.06}px)` }}
+          >
             <div className="w-5 h-5 rounded-full bg-brand-volt/10 flex items-center justify-center text-[10px]">📈</div>
             <div>
               <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest leading-none">Niche Gap</p>
@@ -511,7 +589,10 @@ export default function LandingPage() {
           </div>
 
           {/* Layered floating audit card 2 (Bottom-Right) - visible on lg screens and up */}
-          <div className="hidden lg:flex flex-col gap-2.5 p-4 rounded-2xl bg-zinc-950/90 border border-brand-mint/20 shadow-[0_20px_40px_rgba(0,0,0,0.9)] absolute -bottom-10 lg:-right-2 xl:-right-8 w-52 scale-90 xl:scale-100 z-25 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 text-left">
+          <div 
+            className="hidden lg:flex flex-col gap-2.5 p-4 rounded-2xl bg-zinc-950/90 border border-brand-mint/20 shadow-[0_20px_40px_rgba(0,0,0,0.9)] absolute -bottom-10 lg:-right-2 xl:-right-8 w-52 scale-90 xl:scale-100 z-25 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 text-left"
+            style={{ transform: `translateY(${scrollY * 0.04}px)` }}
+          >
             <div className="flex items-center justify-between">
               <span className="text-[8px] font-mono font-bold text-zinc-400 uppercase tracking-widest">Competitor DNA</span>
               <span className="w-1.5 h-1.5 rounded-full bg-brand-mint animate-pulse" />
@@ -566,6 +647,7 @@ export default function LandingPage() {
 
       {/* ── LIVE DEMO PREVIEW (ENTER DEMO ACCOUNT CONSOLE) ── */}
       <section id="demo" className="relative z-10 py-24 px-4 md:px-8 max-w-5xl mx-auto scroll-mt-20">
+        <RevealOnScroll>
         <div className="rounded-[2.5rem] border border-white/[0.08] bg-zinc-950/60 shadow-[0_24px_80px_rgba(0,0,0,0.9)] overflow-hidden p-8 md:p-14 relative group">
           {/* Accent lighting */}
           <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-brand-volt to-transparent opacity-70" />
@@ -668,11 +750,13 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
+        </RevealOnScroll>
       </section>
 
       {/* ── CORE CAPABILITIES (FEATURES GRID) ── */}
       <section id="features" className="relative z-10 py-24 px-4 md:px-8 max-w-7xl mx-auto scroll-mt-20">
         {/* Title */}
+        <RevealOnScroll>
         <div className="max-w-3xl mb-16 text-left">
           <div className="inline-flex items-center gap-2 bg-brand-volt/10 border border-brand-volt/20 px-3.5 py-1.5 rounded-full mb-4">
             <Cpu className="w-3.5 h-3.5 text-brand-volt" />
@@ -685,11 +769,13 @@ export default function LandingPage() {
             Move past basic view counters. Vyron maps the actual momentum, formatting, and keyword relationships driving successful channels in your space.
           </p>
         </div>
+        </RevealOnScroll>
 
         {/* Feature Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Card 1 */}
-          <div className="interactive-card group relative p-8 rounded-3xl bg-zinc-950/60 border border-zinc-900 hover:border-zinc-800 transition-all duration-300 hover:-translate-y-1">
+          <RevealOnScroll delay={0}>
+          <div className="interactive-card feature-card-glow group relative p-8 rounded-3xl bg-zinc-950/60 border border-zinc-900 hover:border-zinc-800 transition-all duration-300 hover:-translate-y-1">
             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-volt/2 rounded-bl-full pointer-events-none group-hover:bg-brand-volt/5 transition-all duration-500" />
             <span className="font-mono text-[9px] font-extrabold text-zinc-600 group-hover:text-brand-volt transition-colors uppercase tracking-widest block mb-4">01 // VELOCITY TRACKING</span>
             <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xl mb-6 group-hover:border-brand-volt/30 group-hover:bg-zinc-950 transition-colors">
@@ -705,9 +791,11 @@ export default function LandingPage() {
               ))}
             </div>
           </div>
+          </RevealOnScroll>
 
           {/* Card 2 */}
-          <div className="interactive-card group relative p-8 rounded-3xl bg-zinc-950/60 border border-zinc-900 hover:border-zinc-800 transition-all duration-300 hover:-translate-y-1">
+          <RevealOnScroll delay={0.1}>
+          <div className="interactive-card feature-card-glow group relative p-8 rounded-3xl bg-zinc-950/60 border border-zinc-900 hover:border-zinc-800 transition-all duration-300 hover:-translate-y-1">
             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-mint/2 rounded-bl-full pointer-events-none group-hover:bg-brand-mint/5 transition-all duration-500" />
             <span className="font-mono text-[9px] font-extrabold text-zinc-600 group-hover:text-brand-mint transition-colors uppercase tracking-widest block mb-4">02 // EARLY DETECTION</span>
             <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xl mb-6 group-hover:border-brand-mint/30 group-hover:bg-zinc-950 transition-colors">
@@ -723,9 +811,11 @@ export default function LandingPage() {
               ))}
             </div>
           </div>
+          </RevealOnScroll>
 
           {/* Card 3 */}
-          <div className="interactive-card group relative p-8 rounded-3xl bg-zinc-950/60 border border-zinc-900 hover:border-zinc-800 transition-all duration-300 hover:-translate-y-1">
+          <RevealOnScroll delay={0.2}>
+          <div className="interactive-card feature-card-glow group relative p-8 rounded-3xl bg-zinc-950/60 border border-zinc-900 hover:border-zinc-800 transition-all duration-300 hover:-translate-y-1">
             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-rose/2 rounded-bl-full pointer-events-none group-hover:bg-brand-rose/5 transition-all duration-500" />
             <span className="font-mono text-[9px] font-extrabold text-zinc-600 group-hover:text-brand-rose transition-colors uppercase tracking-widest block mb-4">03 // INTEL</span>
             <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xl mb-6 group-hover:border-brand-rose/30 group-hover:bg-zinc-950 transition-colors">
@@ -741,9 +831,11 @@ export default function LandingPage() {
               ))}
             </div>
           </div>
+          </RevealOnScroll>
 
           {/* Card 4 */}
-          <div className="interactive-card group relative p-8 rounded-3xl bg-zinc-950/60 border border-zinc-900 hover:border-zinc-800 transition-all duration-300 hover:-translate-y-1">
+          <RevealOnScroll delay={0.3}>
+          <div className="interactive-card feature-card-glow group relative p-8 rounded-3xl bg-zinc-950/60 border border-zinc-900 hover:border-zinc-800 transition-all duration-300 hover:-translate-y-1">
             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-rose/2 rounded-bl-full pointer-events-none group-hover:bg-brand-rose/5 transition-all duration-500" />
             <span className="font-mono text-[9px] font-extrabold text-zinc-600 group-hover:text-brand-rose transition-colors uppercase tracking-widest block mb-4">04 // FILTERING</span>
             <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xl mb-6 group-hover:border-brand-rose/30 group-hover:bg-zinc-950 transition-colors">
@@ -759,9 +851,11 @@ export default function LandingPage() {
               ))}
             </div>
           </div>
+          </RevealOnScroll>
 
           {/* Card 5 */}
-          <div className="interactive-card group relative p-8 rounded-3xl bg-zinc-950/60 border border-zinc-900 hover:border-zinc-800 transition-all duration-300 hover:-translate-y-1">
+          <RevealOnScroll delay={0.4}>
+          <div className="interactive-card feature-card-glow group relative p-8 rounded-3xl bg-zinc-950/60 border border-zinc-900 hover:border-zinc-800 transition-all duration-300 hover:-translate-y-1">
             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-volt/2 rounded-bl-full pointer-events-none group-hover:bg-brand-volt/5 transition-all duration-500" />
             <span className="font-mono text-[9px] font-extrabold text-zinc-600 group-hover:text-brand-volt transition-colors uppercase tracking-widest block mb-4">05 // WORKSPACE</span>
             <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xl mb-6 group-hover:border-brand-volt/30 group-hover:bg-zinc-950 transition-colors">
@@ -778,8 +872,11 @@ export default function LandingPage() {
             </div>
           </div>
 
+          </RevealOnScroll>
+
           {/* Card 6 */}
-          <div className="interactive-card group relative p-8 rounded-3xl bg-zinc-950/60 border border-zinc-900 hover:border-zinc-800 transition-all duration-300 hover:-translate-y-1">
+          <RevealOnScroll delay={0.5}>
+          <div className="interactive-card feature-card-glow group relative p-8 rounded-3xl bg-zinc-950/60 border border-zinc-900 hover:border-zinc-800 transition-all duration-300 hover:-translate-y-1">
             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-mint/2 rounded-bl-full pointer-events-none group-hover:bg-brand-mint/5 transition-all duration-500" />
             <span className="font-mono text-[9px] font-extrabold text-zinc-600 group-hover:text-brand-mint transition-colors uppercase tracking-widest block mb-4">06 // DIGESTS</span>
             <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xl mb-6 group-hover:border-brand-mint/30 group-hover:bg-zinc-950 transition-colors">
@@ -795,11 +892,13 @@ export default function LandingPage() {
               ))}
             </div>
           </div>
+          </RevealOnScroll>
         </div>
       </section>
 
       {/* ── METALLIC PRICING (HIGH CONVERTING SaaS CARD) ── */}
       <section id="pricing" className="relative z-10 py-20 px-4 md:px-8 max-w-5xl mx-auto scroll-mt-20">
+        <RevealOnScroll>
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 bg-brand-volt/10 border border-brand-volt/20 px-3.5 py-1.5 rounded-full mb-4">
             <Star className="w-3.5 h-3.5 text-brand-volt fill-brand-volt" />
@@ -812,8 +911,10 @@ export default function LandingPage() {
             Try it free for 7 days. Cancel with a single click at any time.
           </p>
         </div>
+        </RevealOnScroll>
 
         {/* early adopter banner */}
+        <RevealOnScroll delay={0.1}>
         <div className="rounded-3xl border border-zinc-800/80 bg-zinc-950/40 backdrop-blur-md overflow-hidden relative mb-6">
           <div className="p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="flex items-start md:items-center gap-4">
@@ -837,8 +938,10 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
+        </RevealOnScroll>
 
         {/* Pricing Card */}
+        <RevealOnScroll delay={0.2}>
         <div className="rounded-3xl border border-brand-volt/20 bg-zinc-950/70 backdrop-blur-md overflow-hidden relative grid grid-cols-1 md:grid-cols-12 gap-8 p-8 md:p-12 shadow-[0_30px_60px_rgba(0,0,0,0.8),0_0_50px_rgba(0,240,255,0.02)]">
           {/* Top highlight bar */}
           <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-brand-volt to-brand-mint" />
@@ -904,10 +1007,12 @@ export default function LandingPage() {
             </ul>
           </div>
         </div>
+        </RevealOnScroll>
       </section>
 
       {/* ── FAQ ACCORDION SECTION (NEW STUNNING WIDGET) ── */}
       <section className="relative z-10 py-16 px-4 md:px-8 max-w-4xl mx-auto">
+        <RevealOnScroll>
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 bg-brand-mint/10 border border-brand-mint/20 px-3.5 py-1.5 rounded-full mb-4">
             <HelpCircle className="w-3.5 h-3.5 text-brand-mint" />
@@ -920,8 +1025,10 @@ export default function LandingPage() {
             Clear answers to how Vyron helps you grow your channel.
           </p>
         </div>
+        </RevealOnScroll>
 
         {/* FAQs */}
+        <RevealOnScroll delay={0.1}>
         <div className="space-y-3">
           {[
             {
@@ -967,10 +1074,12 @@ export default function LandingPage() {
             );
           })}
         </div>
+        </RevealOnScroll>
       </section>
 
       {/* ── BOTTOM CALL TO ACTION ── */}
       <section className="relative z-10 py-16 px-4 md:px-8 max-w-7xl mx-auto">
+        <RevealOnScroll>
         <div className="rounded-3xl border border-zinc-900 bg-zinc-950/40 backdrop-blur-md p-10 md:p-16 text-center relative overflow-hidden shadow-[0_30px_70px_rgba(0,0,0,0.9)]">
           {/* Decorative glows */}
           <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 w-96 h-96 bg-brand-volt/5 rounded-full filter blur-[80px] pointer-events-none" />
@@ -1005,6 +1114,7 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
+        </RevealOnScroll>
       </section>
 
       {/* ── FOOTER ── */}
