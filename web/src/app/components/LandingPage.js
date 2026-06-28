@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { motion, useInView } from 'framer-motion';
 import { 
   Zap, Target, TrendingUp, Search, Cpu, ArrowRight, Check, Play, Sparkles, 
@@ -1139,11 +1140,18 @@ export default function LandingPage() {
             </div>
 
             {/* Links Column */}
-            <div className="md:col-span-5 flex flex-col md:items-end justify-start gap-6">
+            <div className="md:col-span-5 flex flex-col md:items-end justify-start gap-4">
               <div className="flex flex-wrap md:justify-end gap-x-8 gap-y-4 text-[10px] font-black uppercase tracking-widest text-zinc-500">
                 <a href="#features" className="hover:text-brand-volt transition-colors">Features</a>
                 <a href="#demo" className="hover:text-brand-volt transition-colors">Live Demo</a>
                 <a href="#pricing" className="hover:text-brand-volt transition-colors">Pricing</a>
+                <Link href="/docs" className="hover:text-brand-volt transition-colors">Docs</Link>
+              </div>
+              <div className="flex flex-wrap md:justify-end gap-x-6 gap-y-2 text-[9px] font-bold uppercase tracking-widest text-zinc-650 mt-1">
+                <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+                <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
+                <Link href="/cookies" className="hover:text-white transition-colors">Cookies</Link>
+                <Link href="/refund" className="hover:text-white transition-colors">Refund</Link>
               </div>
             </div>
           </div>
