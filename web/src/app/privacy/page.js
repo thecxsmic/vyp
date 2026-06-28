@@ -131,7 +131,7 @@ export default function PrivacyPage() {
             <section className="space-y-3">
               <h2 className="text-white text-base font-bold uppercase tracking-wider">5. User Rights (GDPR & CCPA Compliance)</h2>
               <p>
-                Depending on your location, you have the right to request access to, rectification of, or complete deletion of the personal information stored in your Vyron workspace. You can cancel your workspace subscription or wipe linked YouTube indicators directly from the account portal. For queries, contact us at <span className="text-white font-mono">[CONTACT_EMAIL]</span>.
+                Depending on your location, you have the right to request access to, rectification of, or complete deletion of the personal information stored in your Vyron workspace. You can cancel your workspace subscription or wipe linked YouTube indicators directly from the account portal. For queries, contact us at <span className="text-white font-mono">thecxsmic@gmail.com</span>.
               </p>
             </section>
           </div>

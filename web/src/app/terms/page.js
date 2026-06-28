@@ -121,7 +121,7 @@ export default function TermsPage() {
             <section className="space-y-3">
               <h2 className="text-white text-base font-bold uppercase tracking-wider">6. Contact Information</h2>
               <p>
-                For legal queries regarding terms, licensing, or services, email support at <span className="text-white font-mono">[CONTACT_EMAIL]</span>.
+                For legal queries regarding terms, licensing, or services, email support at <span className="text-white font-mono">thecxsmic@gmail.com</span>.
               </p>
             </section>
           </div>

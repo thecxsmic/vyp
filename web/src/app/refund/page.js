@@ -98,7 +98,7 @@ export default function RefundPage() {
                 Because Vyron provides real-time access to computed creator intelligence, we do not offer pro-rata refunds for partial months or unused time once a billing cycle is charged.
               </p>
               <p>
-                However, in cases of technical billing duplication or transaction processing errors by Razorpay, please reach out to support at <span className="text-white font-mono">[CONTACT_EMAIL]</span> within 7 days of the charge to initiate a manual credit or refund audit.
+                However, in cases of technical billing duplication or transaction processing errors by Razorpay, please reach out to support at <span className="text-white font-mono">thecxsmic@gmail.com</span> within 7 days of the charge to initiate a manual credit or refund audit.
               </p>
             </section>
           </div>
