@@ -75,30 +75,39 @@ export default function RefundPage() {
 
         {/* Content */}
         <main className="md:col-span-9 space-y-6 text-left min-w-0 max-w-3xl">
-          <div>
-            <h1 className="font-display font-extrabold text-2.5xl md:text-3.5xl text-white uppercase tracking-tight leading-none">Refund & Cancellation</h1>
-            <p className="text-zinc-500 text-xs mt-2">Last updated: June 28, 2026</p>
+          <div className="space-y-4">
+            <h1 className="font-display font-extrabold text-2.5xl md:text-3.5xl text-white uppercase tracking-tight leading-none">Refund & Cancellation Policy</h1>
+            <p className="text-zinc-400 text-sm leading-relaxed">
+              We want you to be completely satisfied with Vyron. This policy outlines how subscriptions are managed, when renewals occur, and how to cancel or address billing discrepancies.
+            </p>
+            <p className="text-zinc-500 text-[10px] font-mono">Last updated: June 28, 2026</p>
           </div>
 
-          <div className="prose prose-invert prose-sm max-w-none text-zinc-455 space-y-6 leading-relaxed">
+          <div className="prose prose-invert prose-sm max-w-none text-zinc-400 space-y-6 leading-relaxed">
             <section className="space-y-3">
               <h2 className="text-white text-base font-bold uppercase tracking-wider">1. Cancellation Policy</h2>
+              <div className="text-zinc-550 text-xs mb-2 italic">
+                Quick summary: You can cancel your subscription with a single click inside your dashboard settings.
+              </div>
               <p>
                 You can cancel your subscription at any time. To cancel, navigate to your Billing/Settings section inside the dashboard and select &quot;Cancel Subscription.&quot; 
               </p>
-              <ul className="list-disc pl-5 space-y-1.5">
-                <li>If you cancel during the 7-day trial period, your account will immediately revert to the free tier at the end of the trial period, and your payment method will not be charged.</li>
-                <li>If you cancel after a billing period has started, you will retain access to Pro features until the end of your current billing cycle. No further recurring charges will be initiated.</li>
+              <ul className="list-disc pl-5 space-y-2">
+                <li><strong>Trial Cancellation:</strong> If you cancel during the 7-day free trial period, your account will revert to the free tier at the end of the trial, and your payment method will not be charged.</li>
+                <li><strong>Active Subscription Cancellation:</strong> If you cancel after a billing cycle has started, you will retain access to Pro features until the end of your current billing cycle. No further recurring charges will be initiated.</li>
               </ul>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-white text-base font-bold uppercase tracking-wider">2. Refund Eligibility</h2>
+              <h2 className="text-white text-base font-bold uppercase tracking-wider">2. Refund Guidelines</h2>
+              <div className="text-zinc-550 text-xs mb-2 italic">
+                Quick summary: We do not offer refunds for partial months, but we will review transaction errors.
+              </div>
               <p>
                 Because Vyron provides real-time access to computed creator intelligence, we do not offer pro-rata refunds for partial months or unused time once a billing cycle is charged.
               </p>
               <p>
-                However, in cases of technical billing duplication or transaction processing errors by Razorpay, please reach out to support at <span className="text-white font-mono">thecxsmic@gmail.com</span> within 7 days of the charge to initiate a manual credit or refund audit.
+                However, if you notice double billing or transaction processing errors by Razorpay, please email our support team at <a href="mailto:thecxsmic@gmail.com" className="text-brand-volt font-mono">thecxsmic@gmail.com</a> within 7 days of the charge. We will audit the transaction logs and issue credit adjustments where appropriate.
               </p>
             </section>
           </div>

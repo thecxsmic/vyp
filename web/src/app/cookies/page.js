@@ -75,35 +75,44 @@ export default function CookiesPage() {
 
         {/* Content */}
         <main className="md:col-span-9 space-y-6 text-left min-w-0 max-w-3xl">
-          <div>
+          <div className="space-y-4">
             <h1 className="font-display font-extrabold text-2.5xl md:text-3.5xl text-white uppercase tracking-tight leading-none">Cookie Policy</h1>
-            <p className="text-zinc-500 text-xs mt-2">Last updated: June 28, 2026</p>
+            <p className="text-zinc-400 text-sm leading-relaxed">
+              We believe in transparency. This policy outlines how and why we use cookies to secure your account, process payments, and save your dashboard state.
+            </p>
+            <p className="text-zinc-500 text-[10px] font-mono">Last updated: June 28, 2026</p>
           </div>
 
-          <div className="prose prose-invert prose-sm max-w-none text-zinc-455 space-y-6 leading-relaxed">
+          <div className="prose prose-invert prose-sm max-w-none text-zinc-400 space-y-6 leading-relaxed">
             <section className="space-y-3">
-              <h2 className="text-white text-base font-bold uppercase tracking-wider">1. What Are Cookies</h2>
+              <h2 className="text-white text-base font-bold uppercase tracking-wider">1. What Are Cookies?</h2>
+              <div className="text-zinc-550 text-xs mb-2 italic">
+                Quick summary: Cookies are small text files stored on your browser to help websites remember you.
+              </div>
               <p>
-                Cookies are small text files placed on your device by websites you visit. They are used to make websites work, improve efficiency, and provide analytics information to service operators.
+                Cookies and local browser storage are used by almost all web applications to recognize devices, keep active login sessions open, and store user preferences.
               </p>
             </section>
 
             <section className="space-y-3">
               <h2 className="text-white text-base font-bold uppercase tracking-wider">2. How Vyron Uses Cookies</h2>
+              <div className="text-zinc-550 text-xs mb-2 italic">
+                Quick summary: We use cookies to verify who you are, secure transaction processing, and remember settings.
+              </div>
               <p>
-                We use cookies and local storage tokens to recognize authenticated users and preserve workspace states. Specifically:
+                We do not track you across other websites. We use cookies and local storage tokens strictly to run our features:
               </p>
-              <ul className="list-disc pl-5 space-y-1.5">
-                <li><strong>Essential Session Identification:</strong> Clerk implements cookies (e.g., session tokens) to maintain security gates and verify user authentication across requests.</li>
-                <li><strong>Functional States:</strong> We utilize a local cookie (`demo_mode`) to track when users are operating in sandbox/preview environments.</li>
-                <li><strong>Security & Anti-Abuse:</strong> Payment processing cookies from Razorpay are loaded to process billing securely.</li>
+              <ul className="list-disc pl-5 space-y-2">
+                <li><strong>Authentication:</strong> Clerk sets session identification cookies to keep you signed in securely as you navigate between dashboard modules.</li>
+                <li><strong>Functional state:</strong> We set a `demo_mode` cookie when you launch our workspace preview so the dashboard knows to run in demo sandbox mode.</li>
+                <li><strong>Security & Billing:</strong> Razorpay implements cookies during billing cycles to ensure checkout sessions are secure and transactions are validated.</li>
               </ul>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-white text-base font-bold uppercase tracking-wider">3. Managing Your Preferences</h2>
+              <h2 className="text-white text-base font-bold uppercase tracking-wider">3. Managing Cookie Settings</h2>
               <p>
-                Most web browsers allow you to modify cookie preferences through browser setting menus. Please note that disabling essential cookies will prevent authentication routing and block access to workspace features.
+                You can block or delete cookies through your web browser's setting menus. However, please note that blocking essential authentication cookies (such as Clerk's session cookies) will prevent you from logging in and accessing your private workspace.
               </p>
             </section>
           </div>

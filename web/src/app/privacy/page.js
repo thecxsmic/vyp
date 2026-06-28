@@ -75,63 +75,81 @@ export default function PrivacyPage() {
 
         {/* Content */}
         <main className="md:col-span-9 space-y-6 text-left min-w-0 max-w-3xl">
-          <div>
+          <div className="space-y-4">
             <h1 className="font-display font-extrabold text-2.5xl md:text-3.5xl text-white uppercase tracking-tight leading-none">Privacy Policy</h1>
-            <p className="text-zinc-500 text-xs mt-2">Last updated: June 28, 2026</p>
+            <p className="text-zinc-400 text-sm leading-relaxed">
+              Privacy isn't a legal box for us to check. It's a key part of how we build tools. We believe you should always know what data we collect, why we collect it, and how we protect your rights as a creator. Below, we've broken down our privacy practices in plain English alongside the necessary legal terms.
+            </p>
+            <p className="text-zinc-500 text-[10px] font-mono">Last updated: June 28, 2026</p>
           </div>
 
-          <div className="prose prose-invert prose-sm max-w-none text-zinc-455 space-y-6 leading-relaxed">
+          <div className="prose prose-invert prose-sm max-w-none text-zinc-400 space-y-6 leading-relaxed">
             <section className="space-y-3">
-              <h2 className="text-white text-base font-bold uppercase tracking-wider">1. Information We Collect</h2>
+              <h2 className="text-white text-base font-bold uppercase tracking-wider">1. The Data We Collect</h2>
+              <div className="text-zinc-500 text-xs mb-2 italic">
+                Quick summary: We only collect information that is strictly necessary to log you in, calculate your analytics, and secure your account.
+              </div>
               <p>
-                To provide the Vyron creator intelligence suite, we collect and process the following categories of personal and usage data:
+                To operate the Vyron dashboard and run our metrics calculations, we collect and process the following information:
               </p>
-              <ul className="list-disc pl-5 space-y-1.5">
-                <li><strong>Account Credentials:</strong> We utilize Clerk for authentication. Your username, email address, profile metadata, and linked SSO social credentials are collected and managed securely by Clerk.</li>
-                <li><strong>Connected Channel Data:</strong> If you connect your YouTube channel, we pull read-only channel metadata (channel title, ID, thumbnail) and public channel performance metrics (subscriber counts, public view volume) through the Google/YouTube API Services.</li>
-                <li><strong>Workspace Inputs:</strong> We collect and save query strings, saved competitor handles/IDs, saved videos, outlines, and content notebook entries that you construct in the platform workspace.</li>
-                <li><strong>Payment & Billing Data:</strong> Subscriptions are processed via Razorpay. We do not store credit card numbers on our servers; billing transactions, trial logs, and payment statuses are managed by Razorpay.</li>
+              <ul className="list-disc pl-5 space-y-2">
+                <li><strong>Account Credentials:</strong> We use Clerk to handle user login and account security. When you sign up, Clerk stores your name, email address, profile photo, and social login metadata.</li>
+                <li><strong>YouTube Channel Metrics:</strong> If you connect your channel, we fetch public metadata (your channel name, ID, and thumbnail image) and public channel performance metrics (subscriber totals, weekly view metrics) through Google's API services.</li>
+                <li><strong>Your Inputs:</strong> We store search term queries, competitor handles/IDs, saved videos, outlines, and script ideas that you actively save in your workspace library.</li>
+                <li><strong>Billing Information:</strong> All payments are processed securely by Razorpay. We do not store your credit card or bank details on our servers. Razorpay provides us with basic payment status logs and verification tokens.</li>
               </ul>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-white text-base font-bold uppercase tracking-wider">2. How We Use and Process Data</h2>
+              <h2 className="text-white text-base font-bold uppercase tracking-wider">2. How We Process Your Data</h2>
+              <div className="text-zinc-550 text-xs mb-2 italic">
+                Quick summary: Your metrics are used to generate custom growth indicators. We do not share your private notes or sell your profile data.
+              </div>
               <p>
-                Your information is used solely to run the platform workspace, identify rising content trends, and compute analytics. Specifically:
+                We process your information to deliver and refine our dashboard tools. Specifically, we:
               </p>
-              <ul className="list-disc pl-5 space-y-1.5">
-                <li>We analyze search term queries and vertical metrics to calculate customized Opportunity and Virality scores.</li>
-                <li>We display saved reference assets, outlines, and metrics directly inside your private account library dashboard.</li>
-                <li>We aggregate public competitor vertical channels to draw growth benchmarks and growth curves.</li>
+              <ul className="list-disc pl-5 space-y-2">
+                <li>Calculate opportunity percentages and virality indicators for search terms.</li>
+                <li>Aggregate public competitor data to build growth curves and format benchmarks.</li>
+                <li>Save and display reference material, outlines, and drafts in your private library.</li>
               </ul>
-              <p className="text-zinc-400">
-                <strong>Important:</strong> We do not sell user data to third-party brokers. Your private notebook outlines and drafts are treated as confidential assets and are not shared with external actors.
+              <p>
+                We do not sell your personal data or channel information to data brokers, advertising networks, or other third parties. Your notes, scripts, and drafts are treated as confidential creator property.
               </p>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-white text-base font-bold uppercase tracking-wider">3. Third-Party Data Processors</h2>
+              <h2 className="text-white text-base font-bold uppercase tracking-wider">3. Third-Party Services We Use</h2>
+              <div className="text-zinc-550 text-xs mb-2 italic">
+                Quick summary: We partner with specialized third-party platforms to handle login security, payment cycles, and metric retrieval.
+              </div>
               <p>
-                We coordinate with specific security-cleared third-party services to deliver core features:
+                We share data with the following partners only to run our platform:
               </p>
-              <ul className="list-disc pl-5 space-y-1.5">
-                <li><strong>Authentication:</strong> Clerk handles authentication routing and profile data protection.</li>
-                <li><strong>Payments & Trial Verification:</strong> Razorpay handles payment flows, billing logs, and membership states.</li>
-                <li><strong>Data Retrieval Services:</strong> YouTube API Services are used to verify public statistics. By using Vyron, you agree to be bound by the <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" className="text-brand-volt underline">YouTube Terms of Service</a> and the <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-brand-volt underline">Google Privacy Policy</a>.</li>
+              <ul className="list-disc pl-5 space-y-2">
+                <li><strong>Clerk:</strong> Provides secure authentication gates and user profile protection.</li>
+                <li><strong>Razorpay:</strong> Handles subscription cycles, payment security, and renewals.</li>
+                <li><strong>YouTube API Services:</strong> Retrieves public channel statistics. By using Vyron, you agree to be bound by the <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" className="text-brand-volt underline">YouTube Terms of Service</a> and the <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-brand-volt underline">Google Privacy Policy</a>. You can manage or revoke this access at any time through Google's security settings.</li>
               </ul>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-white text-base font-bold uppercase tracking-wider">4. Security Measures & Retention</h2>
+              <h2 className="text-white text-base font-bold uppercase tracking-wider">4. Data Security & Deletion</h2>
+              <div className="text-zinc-550 text-xs mb-2 italic">
+                Quick summary: We encrypt your data in transit and delete your information when you request account closure.
+              </div>
               <p>
-                We employ standard TLS encryption protocols to protect all data transferred between your browser and our APIs. Read-only channel authorization tokens are kept encrypted. We retain account metadata as long as your workspace account is active. You may request data deletion or revoke connected API tokens at any time through your settings panel.
+                All data moving between your browser and our servers is encrypted using standard TLS protocols. Authorized API access tokens are stored securely. We retain account metadata as long as your workspace account is active. If you delete your account, we wipe your personal information and metadata from our active systems within 30 days.
               </p>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-white text-base font-bold uppercase tracking-wider">5. User Rights (GDPR & CCPA Compliance)</h2>
+              <h2 className="text-white text-base font-bold uppercase tracking-wider">5. Your Control & Rights</h2>
+              <div className="text-zinc-550 text-xs mb-2 italic">
+                Quick summary: You own your data. You can access, edit, or delete your account whenever you choose.
+              </div>
               <p>
-                Depending on your location, you have the right to request access to, rectification of, or complete deletion of the personal information stored in your Vyron workspace. You can cancel your workspace subscription or wipe linked YouTube indicators directly from the account portal. For queries, contact us at <span className="text-white font-mono">thecxsmic@gmail.com</span>.
+                We believe you should have complete control over your information. Under data protection regulations (such as GDPR), you have the right to request access to your data, fix errors, or ask for complete deletion of your workspace logs. You can delete linked YouTube channel tokens or cancel your profile directly from your settings. For questions about your data, email us at <a href="mailto:thecxsmic@gmail.com" className="text-brand-volt font-mono">thecxsmic@gmail.com</a>.
               </p>
             </section>
           </div>

@@ -75,53 +75,76 @@ export default function TermsPage() {
 
         {/* Content */}
         <main className="md:col-span-9 space-y-6 text-left min-w-0 max-w-3xl">
-          <div>
+          <div className="space-y-4">
             <h1 className="font-display font-extrabold text-2.5xl md:text-3.5xl text-white uppercase tracking-tight leading-none">Terms of Service</h1>
-            <p className="text-zinc-500 text-xs mt-2">Last updated: June 28, 2026</p>
+            <p className="text-zinc-400 text-sm leading-relaxed">
+              These terms form the agreement between you and Vyron. We've written them to be clear and straightforward, so you know exactly what rules govern our creator platform and what is expected of both of us.
+            </p>
+            <p className="text-zinc-500 text-[10px] font-mono">Last updated: June 28, 2026</p>
           </div>
 
-          <div className="prose prose-invert prose-sm max-w-none text-zinc-455 space-y-6 leading-relaxed">
+          <div className="prose prose-invert prose-sm max-w-none text-zinc-400 space-y-6 leading-relaxed">
             <section className="space-y-3">
               <h2 className="text-white text-base font-bold uppercase tracking-wider">1. Agreement to Terms</h2>
+              <div className="text-zinc-550 text-xs mb-2 italic">
+                Quick summary: By creating an account and using Vyron, you agree to follow these platform rules.
+              </div>
               <p>
-                By accessing or using the Vyron platform (the &quot;Service&quot;), you agree to be bound by these Terms of Service. If you do not agree to these terms, do not access or use the platform.
+                By accessing or using the Vyron platform (the &quot;Service&quot;), you acknowledge that you have read, understood, and agreed to be bound by these Terms of Service. If you do not agree, you must stop using the platform.
               </p>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-white text-base font-bold uppercase tracking-wider">2. Registration & Accounts</h2>
+              <h2 className="text-white text-base font-bold uppercase tracking-wider">2. Account Creation & Security</h2>
+              <div className="text-zinc-550 text-xs mb-2 italic">
+                Quick summary: Login is secured by Clerk. Keep your session credentials safe.
+              </div>
               <p>
-                To access the workspace tools, you must authenticate through our account login interface powered by Clerk. You agree to provide accurate registration details and maintain the security of your login sessions. You are entirely responsible for all activities occurring under your credentials.
+                To access the workspace tools, you must authenticate through our login interface powered by Clerk. You are responsible for keeping your login credentials confidential and for all activity occurring under your account. If you believe your account has been compromised, notify us immediately.
               </p>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-white text-base font-bold uppercase tracking-wider">3. Subscription, Trials & Billing</h2>
-              <ul className="list-disc pl-5 space-y-1.5">
-                <li><strong>Pro Plan:</strong> Subscription payments are processed via Razorpay. We offer Pro access at a recurring monthly rate of ₹499.</li>
-                <li><strong>7-Day Free Trial:</strong> Users may enroll in a 7-day trial period to test intelligence features. You may cancel your trial within the setting interface before renewal to avoid payment.</li>
-                <li><strong>Automatic Renewal:</strong> Following the trial, subscriptions automatically renew on a monthly cycle. Payments are routed through secure partner portals (Razorpay).</li>
+              <h2 className="text-white text-base font-bold uppercase tracking-wider">3. Subscription, Trial Periods & Billing</h2>
+              <div className="text-zinc-550 text-xs mb-2 italic">
+                Quick summary: Billing is managed via Razorpay. Trials are free, and you can cancel anytime.
+              </div>
+              <ul className="list-disc pl-5 space-y-2">
+                <li><strong>Pro Plan Pricing:</strong> We offer full access to our creator intelligence tools under a monthly Pro Plan priced at ₹499.</li>
+                <li><strong>7-Day Free Trial:</strong> New accounts are eligible for a 7-day free trial. If you cancel before the trial concludes, you will not be charged.</li>
+                <li><strong>Billing Cycles & Automatic Renewal:</strong> Subscription payments are processed securely by Razorpay. Subscriptions renew automatically each month on the anniversary of your billing date unless cancelled.</li>
               </ul>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-white text-base font-bold uppercase tracking-wider">4. Acceptable Use Policy</h2>
+              <h2 className="text-white text-base font-bold uppercase tracking-wider">4. Acceptable Platform Use</h2>
+              <div className="text-zinc-550 text-xs mb-2 italic">
+                Quick summary: Do not scrape our services, hack our systems, or violate YouTube's terms of service.
+              </div>
               <p>
-                You agree not to abuse, scrap, or systematically crawl Vyron content APIs. You agree not to attempt to extract proprietary metrics calculators or break site security mechanisms. By linking YouTube channels or retrieving public metrics, you agree to comply strictly with the <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" className="text-brand-volt underline">YouTube Terms of Service</a>.
+                We build tools to support creators, not to be exploited. You agree not to:
+              </p>
+              <ul className="list-disc pl-5 space-y-2">
+                <li>Systematically scrape, collect, or crawl data from our platform database.</li>
+                <li>Attempt to reverse-engineer our analytical algorithms, Opportunity calculations, or security gates.</li>
+                <li>Violate the <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" className="text-brand-volt underline">YouTube Terms of Service</a> when using connected API features.</li>
+              </ul>
+            </section>
+
+            <section className="space-y-3">
+              <h2 className="text-white text-base font-bold uppercase tracking-wider">5. Content & Metrics Disclaimer</h2>
+              <div className="text-zinc-550 text-xs mb-2 italic">
+                Quick summary: We evaluate public data to guide your content decisions, but we cannot guarantee viral success.
+              </div>
+              <p>
+                Vyron indexes public statistics to help you spot formats and trends. However, platform metrics, search scoring values, and competitor benchmarks are offered for informational guidance only. We do not warrant that the metadata retrieved is free from error, or that following these benchmarks will result in specific channel growth.
               </p>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-white text-base font-bold uppercase tracking-wider">5. Service Availability & Disclaimers</h2>
+              <h2 className="text-white text-base font-bold uppercase tracking-wider">6. Contact Us</h2>
               <p>
-                Vyron provides metric snapshots and opportunity indices for informational reference only. We do not guarantee search metric accuracy, channel milestone projections, or specific viral performance results. The service is provided &quot;as is&quot; and &quot;as available&quot; without warranties of any kind.
-              </p>
-            </section>
-
-            <section className="space-y-3">
-              <h2 className="text-white text-base font-bold uppercase tracking-wider">6. Contact Information</h2>
-              <p>
-                For legal queries regarding terms, licensing, or services, email support at <span className="text-white font-mono">thecxsmic@gmail.com</span>.
+                If you have questions about these terms or platform rules, email our team at <a href="mailto:thecxsmic@gmail.com" className="text-brand-volt font-mono">thecxsmic@gmail.com</a>.
               </p>
             </section>
           </div>
