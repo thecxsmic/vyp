@@ -392,7 +392,7 @@ export default function LandingPage() {
             {/* Logo */}
             <a href="#" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2.5 group">
               <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-brand-volt via-[#00b0ff] to-brand-mint shadow-[0_0_15px_rgba(0,240,255,0.25)] group-hover:shadow-[0_0_25px_rgba(0,240,255,0.45)] transition-all" />
-              <span className="font-display font-extrabold text-lg text-white tracking-tight">SVAY</span>
+              <span className="font-logo font-black text-lg text-white tracking-tight">SVAY</span>
             </a>
 
             {/* Hamburger menu button for mobile */}
@@ -458,7 +458,7 @@ export default function LandingPage() {
           </div>
 
           {/* Main Title */}
-          <h1 className="font-ahsing font-extrabold text-5xl md:text-4xl lg:text-5xl xl:text-7xl leading-[1.0] tracking-tight text-white mb-4 md:mb-6">
+          <h1 className="font-display font-extrabold text-5xl md:text-4xl lg:text-5xl xl:text-7xl leading-[1.0] tracking-tight text-white mb-4 md:mb-6">
             Know what performs.<br/>
             Before you hit<br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0052ff] via-[#00d2ff] to-[#7c3aed] drop-shadow-[0_0_15px_rgba(0,240,255,0.1)] text-glow-volt">
@@ -1253,7 +1253,7 @@ export default function LandingPage() {
             <div className="md:col-span-7 flex flex-col items-start gap-4">
               <div className="flex items-center gap-2.5">
                 <div className="w-5.5 h-5.5 rounded-full bg-gradient-to-tr from-brand-volt via-[#00b0ff] to-brand-mint shadow-[0_0_12px_rgba(0,240,255,0.2)]" />
-                <span className="font-display font-extrabold text-base text-white tracking-tight">SVAY</span>
+                <span className="font-logo font-black text-base text-white tracking-tight">SVAY</span>
               </div>
               <p className="text-zinc-500 text-xs leading-relaxed max-w-sm">
                 Decoding YouTube performance data in real-time so you can focus on building a sustainable channel.

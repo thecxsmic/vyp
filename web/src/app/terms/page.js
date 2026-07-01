@@ -36,7 +36,7 @@ export default function TermsPage() {
           
           <div className="flex items-center gap-2 min-w-0">
             <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-brand-volt via-[#00b0ff] to-brand-mint shrink-0" />
-            <span className="font-display font-extrabold text-sm text-white tracking-tight uppercase shrink-0">SVAY</span>
+            <span className="font-logo font-black text-sm text-white tracking-tight uppercase shrink-0">SVAY</span>
             <span className="text-[10px] font-mono text-zinc-500 font-bold uppercase tracking-widest pl-2 border-l border-zinc-800 shrink-0">Legal</span>
           </div>
         </div>
@@ -76,7 +76,7 @@ export default function TermsPage() {
         {/* Content */}
         <main className="md:col-span-9 space-y-6 text-left min-w-0 max-w-3xl">
           <div className="space-y-4">
-            <h1 className="font-ahsing font-extrabold text-2.5xl md:text-3.5xl text-white uppercase tracking-tight leading-none">Terms of Service</h1>
+            <h1 className="font-display font-extrabold text-2.5xl md:text-3.5xl text-white uppercase tracking-tight leading-none">Terms of Service</h1>
             <p className="text-zinc-400 text-sm leading-relaxed">
               These terms form the agreement between you and Svay. We've written them to be clear and straightforward, so you know exactly what rules govern our creator platform and what is expected of both of us.
             </p>
