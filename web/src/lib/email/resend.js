@@ -2,7 +2,7 @@ import { Resend } from 'resend';
 
 let resend;
 
-export async function sendEmail({ to, subject, html, text }) {
+export async function sendEmail({ to, subject, html, text, from = 'Svay <insights@svay.space>' }) {
   if (!process.env.RESEND_API_KEY) {
     console.warn('[Resend] API Key missing, skipping email');
     return { success: false, error: 'API Key missing' };
@@ -14,7 +14,7 @@ export async function sendEmail({ to, subject, html, text }) {
 
   try {
     const data = await resend.emails.send({
-      from: 'Svay <hello@updates.svay.space>',
+      from,
       to,
       subject,
       html: html || text,
