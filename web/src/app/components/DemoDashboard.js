@@ -266,7 +266,7 @@ export default function DemoDashboard() {
                 <Sparkles className="w-3.5 h-3.5 text-brand-volt" />
               </div>
             </div>
-            <span className="font-display font-extrabold text-sm tracking-wider text-white">SVAY CORES</span>
+            <span className="font-display font-extrabold text-sm tracking-wider text-white"><span className="font-logo font-black tracking-tight mr-1">SVAY</span> CORES</span>
           </div>
 
           {/* Nav List */}

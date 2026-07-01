@@ -95,7 +95,7 @@ export default function CookiesPage() {
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-white text-base font-bold uppercase tracking-wider">2. How Svay Uses Cookies</h2>
+              <h2 className="text-white text-base font-bold uppercase tracking-wider">2. How <span className="font-logo">Svay</span> Uses Cookies</h2>
               <div className="text-zinc-550 text-xs mb-2 italic">
                 Quick summary: We use cookies to verify who you are, secure transaction processing, and remember settings.
               </div>

@@ -698,7 +698,7 @@ export default function LandingPage() {
               <h2 className="font-display font-extrabold text-3.5xl md:text-5.5xl tracking-tight text-white leading-none uppercase">
                 Test-drive the<br/>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0052ff] via-[#00d2ff] to-[#7c3aed] text-glow-volt">
-                  Svay Workspace.
+                  <span className="font-logo">Svay</span> Workspace.
                 </span>
               </h2>
               
@@ -1212,7 +1212,7 @@ export default function LandingPage() {
           <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 w-96 h-96 bg-brand-volt/5 rounded-full filter blur-[80px] pointer-events-none" />
           
           {/* Huge watermark text */}
-          <div className="absolute font-display font-black text-white/[0.015] text-8xl md:text-[160px] leading-none tracking-tighter select-none pointer-events-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 uppercase">
+          <div className="absolute font-logo font-black text-white/[0.015] text-8xl md:text-[160px] leading-none tracking-tighter select-none pointer-events-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 uppercase">
             SVAY
           </div>
 
