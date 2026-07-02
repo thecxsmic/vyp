@@ -186,7 +186,15 @@ export default function LayoutContent({ children, subscription }) {
             </div>
           </div>
         ) : (
-          <div className="w-full bg-accents-1 border border-accents-2 rounded-lg p-3 flex items-center gap-3 hover:bg-white/[0.02] transition-colors cursor-pointer">
+          <div 
+            onClick={(e) => {
+              const button = e.currentTarget.querySelector('button');
+              if (button && !button.contains(e.target)) {
+                button.click();
+              }
+            }}
+            className="w-full bg-accents-1 border border-accents-2 rounded-lg p-3 flex items-center gap-3 hover:bg-white/[0.02] transition-colors cursor-pointer"
+          >
               <UserButton appearance={{ 
                 elements: { 
                   userButtonAvatarBox: "w-8 h-8 border border-white/10" 
