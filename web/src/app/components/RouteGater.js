@@ -68,7 +68,8 @@ export default function RouteGater({ children, initialIsSubscribed, initialSubsc
                        pathname.startsWith("/privacy") ||
                        pathname.startsWith("/terms") ||
                        pathname.startsWith("/cookies") ||
-                       pathname.startsWith("/refund");
+                       pathname.startsWith("/refund") ||
+                       pathname.startsWith("/shared");
 
   if (!isLoaded) {
     // Still render public pages while Clerk is loading to avoid blank screen

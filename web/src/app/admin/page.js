@@ -16,7 +16,9 @@ import {
   ArrowLeft,
   Users,
   Copy,
-  Check
+  Check,
+  Globe,
+  Share2
 } from "lucide-react";
 
 export default function AdminPage() {
@@ -45,6 +47,12 @@ export default function AdminPage() {
   const [granting, setGranting] = useState(false);
   const [grantError, setGrantError] = useState("");
   const [grantSuccess, setGrantSuccess] = useState("");
+
+  // Form states - shareable analysis
+  const [shareQuery, setShareQuery] = useState("");
+  const [generatingShareLink, setGeneratingShareLink] = useState(false);
+  const [shareSuccessLink, setShareSuccessLink] = useState("");
+  const [shareError, setShareError] = useState("");
 
   // Check admin authorization
   useEffect(() => {
@@ -170,6 +178,36 @@ export default function AdminPage() {
     }
   };
 
+  const handleGenerateShareLink = async (e) => {
+    e.preventDefault();
+    if (!shareQuery.trim()) return;
+
+    setGeneratingShareLink(true);
+    setShareError("");
+    setShareSuccessLink("");
+
+    try {
+      const res = await fetch("/api/admin/share-analysis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: shareQuery.trim() }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to generate shareable analysis");
+      }
+
+      const publicLink = `${window.location.origin}/shared/channel/${data.channelId}`;
+      setShareSuccessLink(publicLink);
+      setShareQuery("");
+    } catch (err) {
+      setShareError(err.message);
+    } finally {
+      setGeneratingShareLink(false);
+    }
+  };
+
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     setCopiedCode(text);
@@ -230,7 +268,7 @@ export default function AdminPage() {
         </div>
         
         {/* Section 1: Top Actions grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 sm:gap-8">
           
           {/* Card: Generate Promo Code */}
           <section className="bg-zinc-950/80 border border-white/[0.06] rounded-2xl sm:rounded-[2rem] p-4 sm:p-8 backdrop-blur-md relative overflow-hidden flex flex-col justify-between">
@@ -389,6 +427,77 @@ export default function AdminPage() {
                   ) : (
                     <>
                       <Zap className="w-3.5 h-3.5" /> Grant Pro Access
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          </section>
+
+          {/* Card: Generate Shareable Channel Analysis */}
+          <section className="bg-zinc-950/80 border border-white/[0.06] rounded-2xl sm:rounded-[2rem] p-4 sm:p-8 backdrop-blur-md relative overflow-hidden flex flex-col justify-between">
+            <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-brand-volt/30 to-transparent" />
+
+            <div className="space-y-4 sm:space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-brand-volt/10 rounded-xl border border-brand-volt/20">
+                  <Globe className="w-4 sm:w-5 h-4 sm:h-5 text-brand-volt" />
+                </div>
+                <div>
+                  <h2 className="font-display font-extrabold text-base sm:text-lg text-white uppercase">Public Share Report</h2>
+                  <p className="text-zinc-500 text-[10px] sm:text-xs mt-0.5">Generate a public analysis link for marketing & sharing.</p>
+                </div>
+              </div>
+
+              <form onSubmit={handleGenerateShareLink} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-[9px] sm:text-[10px] font-black text-zinc-400 uppercase tracking-wider">Channel ID or Handle</label>
+                  <input 
+                    type="text"
+                    placeholder="e.g. @veloce or UC..."
+                    value={shareQuery}
+                    onChange={(e) => setShareQuery(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm focus:outline-none focus:border-brand-volt transition-all placeholder:text-zinc-650"
+                    required
+                  />
+                </div>
+
+                {shareError && (
+                  <p className="text-brand-rose text-[11px] font-semibold">{shareError}</p>
+                )}
+
+                {shareSuccessLink && (
+                  <div className="space-y-2 animate-in fade-in duration-300">
+                    <p className="text-emerald-400 text-[11px] font-semibold flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> Link generated successfully!
+                    </p>
+                    <div className="flex bg-zinc-900 border border-zinc-855 p-2 rounded-xl items-center justify-between gap-2 overflow-hidden">
+                      <span className="text-[10px] font-mono text-zinc-450 truncate select-all">{shareSuccessLink}</span>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(shareSuccessLink)}
+                        className="p-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-all shrink-0 cursor-pointer"
+                      >
+                        {copiedCode === shareSuccessLink ? (
+                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={generatingShareLink}
+                  className="w-full py-3 bg-brand-volt hover:bg-brand-volt/90 text-black font-black text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {generatingShareLink ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Share2 className="w-3.5 h-3.5" /> Generate Share Link
                     </>
                   )}
                 </button>
