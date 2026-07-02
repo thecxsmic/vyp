@@ -59,8 +59,8 @@ export default function SetupUserChannelModal({ onChannelSet }) {
 
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center md:p-4 backdrop-blur-2xl bg-black/80 animate-in fade-in duration-500">
-      <div className="bg-[#050505] border-0 md:border border-white/10 w-full h-full md:h-auto md:max-w-xl rounded-none md:rounded-[3rem] overflow-y-auto shadow-[0_0_100px_rgba(0,112,243,0.2)] flex flex-col justify-center animate-in zoom-in-95 duration-500">
-        <div className="p-8 md:p-12">
+      <div className="bg-[#050505] border-0 md:border border-white/10 w-full h-full md:h-auto md:max-w-xl rounded-none md:rounded-[3rem] overflow-y-auto shadow-[0_0_100px_rgba(0,112,243,0.2)] flex flex-col justify-between animate-in zoom-in-95 duration-500">
+        <div className="p-8 md:p-12 flex-1 flex flex-col justify-center">
           <div className="w-20 h-20 bg-[#0070f3]/10 rounded-full flex items-center justify-center mx-auto mb-8">
             <svg className="w-10 h-10 text-[#0070f3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
