@@ -39,6 +39,14 @@ export default function AdminPage() {
   const [loadingData, setLoadingData] = useState(true);
   const [loadingChannels, setLoadingChannels] = useState(false);
   const [copiedCode, setCopiedCode] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast((prev) => (prev?.message === message ? null : prev));
+    }, 4000);
+  };
 
   // Form states - promo creation
   const [newCode, setNewCode] = useState("");
@@ -162,12 +170,14 @@ export default function AdminPage() {
       });
       if (res.ok) {
         fetchAdminData();
+        showToast("Promo code deleted successfully");
       } else {
         const data = await res.json();
-        alert(data.error || "Failed to delete code");
+        showToast(data.error || "Failed to delete code", "error");
       }
     } catch (err) {
       console.error("Failed to delete code:", err);
+      showToast("Failed to delete code.", "error");
     }
   };
 
@@ -274,14 +284,14 @@ export default function AdminPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        alert(data.message || "Cache successfully cleared!");
+        showToast(data.message || "Cache successfully cleared!");
         fetchChannels();
       } else {
-        alert(data.error || "Failed to clear cache");
+        showToast(data.error || "Failed to clear cache", "error");
       }
     } catch (err) {
       console.error("Failed to clear cache:", err);
-      alert("Failed to clear cache.");
+      showToast("Failed to clear cache.", "error");
     }
   };
 
@@ -294,14 +304,14 @@ export default function AdminPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        alert(data.message || "All database caches purged!");
+        showToast(data.message || "All database caches purged!");
         fetchChannels();
       } else {
-        alert(data.error || "Failed to purge caches");
+        showToast(data.error || "Failed to purge caches", "error");
       }
     } catch (err) {
       console.error("Failed to purge all caches:", err);
-      alert("Failed to purge all caches.");
+      showToast("Failed to purge all caches.", "error");
     }
   };
 
@@ -994,6 +1004,24 @@ export default function AdminPage() {
         )}
 
       </main>
+
+      {/* Vercel-style Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 shadow-2xl animate-in fade-in slide-in-from-bottom-5 duration-200">
+          {toast.type === "success" ? (
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          ) : (
+            <ShieldAlert className="w-4 h-4 text-rose-500" />
+          )}
+          <span className="text-xs text-zinc-300 font-medium">{toast.message}</span>
+          <button 
+            onClick={() => setToast(null)}
+            className="text-[10px] text-zinc-650 hover:text-zinc-400 ml-2 font-mono uppercase cursor-pointer transition-colors"
+          >
+            dismiss
+          </button>
+        </div>
+      )}
     </div>
   );
 }
