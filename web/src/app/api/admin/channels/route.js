@@ -29,7 +29,48 @@ export async function GET(req) {
 
     return apiSuccess({ channels });
   } catch (error) {
-    console.error("[Admin Channels API] Error:", error);
+    console.error("[Admin Channels API] GET Error:", error);
+    return apiError(error);
+  }
+}
+
+export async function DELETE(req) {
+  try {
+    const { userId } = await auth();
+    if (!userId) return apiError(new Error("Unauthorized"), 401);
+
+    const user = await currentUser();
+    const userEmail = user?.emailAddresses?.[0]?.emailAddress;
+    if (userEmail !== "thecxsmic@gmail.com") {
+      return apiError(new Error("Forbidden: Admin access required"), 403);
+    }
+
+    const { searchParams } = new URL(req.url);
+    const channelId = searchParams.get("channelId");
+    if (!channelId) {
+      return apiError(new Error("channelId query parameter is required"), 400);
+    }
+
+    // Delete records from channels, videos, and trend_radar
+    await client.execute({
+      sql: "DELETE FROM channels WHERE id = ?",
+      args: [channelId]
+    });
+    
+    await client.execute({
+      sql: "DELETE FROM videos WHERE channel_id = ?",
+      args: [channelId]
+    });
+
+    await client.execute({
+      sql: "DELETE FROM trend_radar WHERE channel_id = ?",
+      args: [channelId]
+    });
+
+    console.log(`[Admin Channels API] Cleared cache for channel: ${channelId}`);
+    return apiSuccess({ success: true, message: "Channel cache successfully cleared." });
+  } catch (error) {
+    console.error("[Admin Channels API] DELETE Error:", error);
     return apiError(error);
   }
 }

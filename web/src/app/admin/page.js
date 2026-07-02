@@ -264,6 +264,26 @@ export default function AdminPage() {
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
+  const handleClearCache = async (channelId, title) => {
+    if (!confirm(`Are you sure you want to clear all cached database records for channel: "${title}"?\n\nThis will remove its metrics, cached videos, and generated AI video ideas, allowing you to fetch clean updates.`)) return;
+
+    try {
+      const res = await fetch(`/api/admin/channels?channelId=${encodeURIComponent(channelId)}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message || "Cache successfully cleared!");
+        fetchChannels();
+      } else {
+        alert(data.error || "Failed to clear cache");
+      }
+    } catch (err) {
+      console.error("Failed to clear cache:", err);
+      alert("Failed to clear cache.");
+    }
+  };
+
   function formatNumber(num) {
     if (!num) return "0";
     const parsed = parseInt(num, 10);
@@ -901,6 +921,13 @@ export default function AdminPage() {
                                 >
                                   Open<span className="hidden sm:inline"> Report</span> <ExternalLink className="w-3 h-3 stroke-[2.5]" />
                                 </Link>
+                                <button
+                                  onClick={() => handleClearCache(item.id, item.title)}
+                                  className="p-1.5 bg-brand-rose/10 hover:bg-brand-rose/20 border border-brand-rose/20 hover:border-brand-rose/30 rounded-lg text-brand-rose hover:text-white transition-all cursor-pointer flex items-center justify-center shrink-0"
+                                  title="Clear cached data"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
                               </div>
                             </td>
                           </tr>
