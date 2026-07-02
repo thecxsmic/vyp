@@ -68,6 +68,7 @@ export default function SharedChannelPage({ params }) {
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [hoverInfo, setHoverInfo] = useState(null);
+  const [copiedAIReport, setCopiedAIReport] = useState(false);
 
   useEffect(() => {
     const fetchReport = async () => {
@@ -101,6 +102,65 @@ export default function SharedChannelPage({ params }) {
     );
     const tweetUrl = encodeURIComponent(window.location.href);
     window.open(`https://twitter.com/intent/tweet?text=${tweetText}&url=${tweetUrl}`, "_blank");
+  };
+
+  const handleCopyAIReport = () => {
+    if (!analysisData) return;
+    
+    const { channel, videos, competitors = [], trends } = analysisData;
+    const tierData = getAudienceTier(channel.statistics, videos);
+    
+    // 1. Video ideas list
+    const ideasText = trends?.videoIdeas && trends.videoIdeas.length > 0
+      ? trends.videoIdeas.map((idea, index) => 
+          `${index + 1}. Title Idea: "${idea.title || idea.topic}"\n   Strategy: ${idea.strategy || idea.description}\n   Target Audience Hook: ${idea.angle || "General engagement hook"}`
+        ).join("\n\n")
+      : "No automated ideas generated. Run deep analysis in dashboard.";
+      
+    // 2. Competitors list
+    const competitorsText = competitors.length > 0
+      ? competitors.map(comp => 
+          `- Name: ${comp.title} (@${comp.custom_url || comp.id})\n  Type: ${comp.matchType || "BENCHMARK"} (${comp.matchReason || "Similar size/cadence"})\n  Subscribers: ${formatNumber(comp.statistics?.subscriberCount)}`
+        ).join("\n")
+      : "No benchmarked competitors found.";
+
+    // 3. Top videos virality list
+    const topVideosText = videos && videos.length > 0
+      ? videos.slice(0, 5).map(v => 
+          `- Title: "${v.snippet?.title || v.title}"\n  Views: ${formatNumber(v.statistics?.viewCount || v.views)}\n  Likes: ${formatNumber(v.statistics?.likeCount || v.likes)}`
+        ).join("\n")
+      : "No parsed video statistics available.";
+
+    const promptText = `
+# SVAY CREATOR INTELLIGENCE REPORT
+## CHANNEL AUDIT: ${channel.title} (@${channel.custom_url || channel.id})
+
+This is a structured, AI-ready report containing creator performance data, subscriber speed, competitive landscapes, virality benchmarks, and video opportunities.
+
+### 📊 CHANNEL PERFORMANCE INDEX
+- Channel Title: ${channel.title}
+- Handle/URL: ${channel.custom_url ? "@" + channel.custom_url : "https://youtube.com/channel/" + channel.id}
+- Total Subscribers: ${formatNumber(channel.statistics?.subscriberCount)}
+- Total Channel Views: ${formatNumber(channel.statistics?.viewCount)}
+- Total Videos Published: ${formatNumber(channel.statistics?.videoCount)}
+- Svay Audience Tier: ${tierData.label} (${tierData.sub})
+
+### ⚡ TOP PERFORMING CONTENT
+${topVideosText}
+
+### 🧠 STRATEGIC VIDEO OPPORTUNITIES (AI MOCK IDEAS)
+${ideasText}
+
+### 🏁 COMPETITIVE MATRIX & RIVAL METRICS
+${competitorsText}
+
+---
+*Audit compiled by Svay Intelligence (https://svay.space). Paste this data into Claude, Gemini, or ChatGPT with prompt: "Analyze this channel audit and suggest a 30-day content calendar, outline three specific script strategies to improve audience retention, and identify content gaps based on my competitors."*
+    `.trim();
+
+    navigator.clipboard.writeText(promptText);
+    setCopiedAIReport(true);
+    setTimeout(() => setCopiedAIReport(false), 2500);
   };
 
   if (loading) {
@@ -281,12 +341,29 @@ export default function SharedChannelPage({ params }) {
               </div>
             </div>
             
-            <button
-              onClick={handleShareOnTwitter}
-              className="px-5 py-3 bg-white text-black rounded-2xl hover:scale-105 active:scale-95 transition-all text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2"
-            >
-              <Share2 className="w-4 h-4" /> Share on Twitter / X
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto mt-4 md:mt-0">
+              <button
+                onClick={handleCopyAIReport}
+                className="px-5 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl hover:scale-105 active:scale-95 transition-all text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 text-white shrink-0 cursor-pointer"
+              >
+                {copiedAIReport ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-400" /> Copied AI Report
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" /> Copy AI-Ready Report
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={handleShareOnTwitter}
+                className="px-5 py-3 bg-white text-black rounded-2xl hover:scale-105 active:scale-95 transition-all text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+              >
+                <Share2 className="w-4 h-4" /> Share on Twitter / X
+              </button>
+            </div>
           </div>
 
           {/* Stats Bar */}
