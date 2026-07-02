@@ -25,7 +25,8 @@ import {
   Activity,
   MousePointer2,
   PieChart,
-  Mail
+  Mail,
+  Trophy
 } from 'lucide-react';
 import { useTitle } from '@/lib/hooks/titles';
 import ResearchNotesModal from '../components/ResearchNotesModal';
@@ -505,16 +506,72 @@ export default function CompetitorsPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {data.competitors.map((comp) => (
-                      <CompetitorCard 
-                        key={comp.id} 
-                        comp={comp} 
-                        baseSubs={parseInt(data.baseChannel.statistics.subscriberCount)}
-                        onSave={() => handleSaveNote('channel', comp.title, comp)}
-                      />
-                    ))}
-                  </div>
+                  {(() => {
+                    const baseSubs = parseInt(data.baseChannel.statistics?.subscriberCount || 0, 10);
+                    const largerCompetitors = data.competitors.filter(c => parseInt(c.statistics?.subscriberCount || 0, 10) > baseSubs);
+                    const hasLarger = largerCompetitors.length > 0;
+
+                    if (!hasLarger && baseSubs > 0) {
+                      return (
+                        <div className="space-y-8">
+                          <div className="bg-gradient-to-br from-brand-volt/10 via-zinc-950/40 to-black border border-brand-volt/20 p-8 sm:p-12 rounded-[2rem] text-center space-y-6 relative overflow-hidden shadow-[0_0_50px_rgba(221,255,0,0.05)]">
+                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-brand-volt/5 via-transparent to-transparent pointer-events-none" />
+                            <div className="w-16 h-16 bg-brand-volt/10 border border-brand-volt/20 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                              <Trophy className="w-8 h-8 text-brand-volt animate-bounce" />
+                            </div>
+                            <div className="space-y-2 max-w-xl mx-auto">
+                              <h4 className="text-sm font-black text-brand-volt uppercase tracking-widest">🏆 Niche Dominance Established</h4>
+                              <h3 className="text-xl sm:text-2xl font-display font-extrabold text-white uppercase tracking-tight">Undisputed Market Leader</h3>
+                              <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed pt-2">
+                                Your channel sits at the absolute peak of this niche's subscriber hierarchy. No larger rivals were detected in this keyword space. 
+                                You are currently the primary benchmark for other creators. Focus on pioneering new formats and optimizing viewer retention to protect your market share.
+                              </p>
+                            </div>
+
+                            {data.competitors.length > 0 && (
+                              <div className="pt-8 border-t border-zinc-800 space-y-4">
+                                <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block">Benchmarked Peers (Under Your Lead)</label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                                  {data.competitors.slice(0, 2).map((comp, idx) => (
+                                    <div key={idx} className="bg-white/[0.02] border border-white/5 p-4 rounded-xl flex items-center justify-between gap-3">
+                                      <div className="flex items-center gap-3 min-w-0">
+                                        <img 
+                                          src={comp.thumbnail || `https://ui-avatars.com/api/?name=${encodeURIComponent(comp.title)}&background=27272a&color=fff`} 
+                                          className="w-8 h-8 rounded-full border border-white/5 object-cover shrink-0" 
+                                          alt="" 
+                                        />
+                                        <div className="min-w-0">
+                                          <span className="font-bold text-white text-xs block truncate">{comp.title}</span>
+                                          <span className="text-[9px] text-zinc-500 font-mono block truncate">{comp.custom_url || "YouTube Channel"}</span>
+                                        </div>
+                                      </div>
+                                      <div className="text-right shrink-0">
+                                        <span className="text-[8px] font-black text-brand-volt uppercase tracking-wider block">Lead Gap</span>
+                                        <span className="text-xs font-mono font-bold text-white">+{formatNumber(baseSubs - parseInt(comp.statistics?.subscriberCount || 0, 10))}</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {data.competitors.map((comp) => (
+                          <CompetitorCard 
+                            key={comp.id} 
+                            comp={comp} 
+                            baseSubs={baseSubs}
+                            onSave={() => handleSaveNote('channel', comp.title, comp)}
+                          />
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
 
