@@ -1,6 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
-import { setUserChannel, getUserChannel, unsetUserChannel, getChannel, saveChannel } from "@/lib/cache/turso";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { setUserChannel, getUserChannel, unsetUserChannel, getChannel, saveChannel, getCache, setCache } from "@/lib/cache/turso";
 import { fetchYouTubeChannels } from "@/lib/youtube/channels";
+import { sendEmail } from "@/lib/email/resend";
 import { apiSuccess, apiError } from "@/lib/utils/response";
 import { getIsDemoMode, MOCK_CHANNELS } from "@/lib/utils/demoMock";
 
@@ -29,11 +30,28 @@ export async function POST(req) {
     const { userId } = await auth();
     if (!userId) return apiError(new Error("Unauthorized"), 401);
 
-    const { channelId, action } = await req.json();
+    const { channelId, action, channelName } = await req.json();
 
-    if (action === 'unset') {
+    if (action === 'verify-remove') {
+      if (!channelName) {
+        return apiError(new Error("Channel name confirmation is required"), 400);
+      }
+
+      const userChannel = await getUserChannel(userId);
+      if (!userChannel) {
+        return apiError(new Error("No channel is connected to this account"), 404);
+      }
+
+      if (channelName.trim().toLowerCase() !== userChannel.title.trim().toLowerCase()) {
+        return apiError(new Error("The entered name does not match your connected channel's name."), 400);
+      }
+
       const result = await unsetUserChannel(userId);
       return apiSuccess(result);
+    }
+
+    if (action === 'unset') {
+      return apiError(new Error("2-step verification is required to remove a channel."), 400);
     }
 
     if (!channelId) return apiError(new Error("Channel ID is required"), 400);

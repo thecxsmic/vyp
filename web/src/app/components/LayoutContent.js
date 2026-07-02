@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { UserButton } from "@clerk/nextjs";
-import { Plus, Menu, X, Search, Zap, Users, Trophy, BookOpen, BarChart3, Activity, Radio, HelpCircle, SlidersHorizontal } from 'lucide-react';
+import { Plus, Menu, X, Search, Zap, Users, Trophy, BookOpen, BarChart3, Activity, Radio, HelpCircle, SlidersHorizontal, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useChannel } from '@/contexts/channel';
 import { useUser } from '@/contexts/user';
 import PinnedChannels from "./PinnedChannels";
 import ResearchNotesModal from "./ResearchNotesModal";
 import SetupUserChannelModal from "./SetupUserChannelModal";
+import RemoveUserChannelModal from "./RemoveUserChannelModal";
 
 const navItems = [
   { name: 'Search', href: '/', icon: Search },
@@ -25,6 +26,7 @@ const navItems = [
 export default function LayoutContent({ children, subscription }) {
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
   const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
+  const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { channels, userChannel, selectChannel, loading, refreshChannels } = useChannel();
   const { user } = useUser();
@@ -106,22 +108,35 @@ export default function LayoutContent({ children, subscription }) {
         
         {userChannel ? (
           <div className="px-2">
-            <button 
-              onClick={() => selectChannel(userChannel.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all relative group ${
-                channels.selectedId === userChannel.id 
-                  ? 'text-white bg-white/[0.08]' 
-                  : 'text-accents-4 hover:text-white hover:bg-white/[0.04]'
-              }`}
-            >
-              <div className="w-4 h-4 rounded-full overflow-hidden border border-white/10 shrink-0">
-                <img src={userChannel.thumbnail} className="w-full h-full object-cover" alt="" />
-              </div>
-              <span className="truncate">{userChannel.title}</span>
-              {channels.selectedId === userChannel.id && (
-                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-geist-success shadow-[0_0_8px_rgba(0,112,243,0.5)]"></div>
-              )}
-            </button>
+            <div className="relative group/channel">
+              <button 
+                onClick={() => selectChannel(userChannel.id)}
+                className={`w-full flex items-center gap-3 pl-3 pr-8 py-2 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all text-left relative ${
+                  channels.selectedId === userChannel.id 
+                    ? 'text-white bg-white/[0.08]' 
+                    : 'text-accents-4 hover:text-white hover:bg-white/[0.04]'
+                }`}
+              >
+                <div className="w-4 h-4 rounded-full overflow-hidden border border-white/10 shrink-0">
+                  <img src={userChannel.thumbnail} className="w-full h-full object-cover" alt="" />
+                </div>
+                <span className="truncate flex-1">{userChannel.title}</span>
+                {channels.selectedId === userChannel.id && (
+                  <div className="w-1.5 h-1.5 rounded-full bg-geist-success shadow-[0_0_8px_rgba(0,112,243,0.5)] shrink-0"></div>
+                )}
+              </button>
+              
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsRemoveModalOpen(true);
+                }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-accents-4 hover:text-red-500 rounded-md hover:bg-white/5 opacity-100 md:opacity-0 md:group-hover/channel:opacity-100 transition-all cursor-pointer z-10"
+                title="Disconnect Channel"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         ) : (
           <div className="px-2">
@@ -227,6 +242,17 @@ export default function LayoutContent({ children, subscription }) {
             setIsSetupModalOpen(false);
             refreshChannels();
           }} 
+        />
+      )}
+
+      {isRemoveModalOpen && (
+        <RemoveUserChannelModal 
+          onClose={() => setIsRemoveModalOpen(false)}
+          onChannelRemoved={() => {
+            setIsRemoveModalOpen(false);
+            refreshChannels();
+          }}
+          channelTitle={userChannel?.title}
         />
       )}
 
