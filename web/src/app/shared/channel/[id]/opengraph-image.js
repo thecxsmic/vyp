@@ -158,48 +158,67 @@ export default async function Image({ params }) {
           <div
             style={{
               display: "flex",
-              flexDirection: "column",
+              flexDirection: "row",
+              alignItems: "center",
               flex: "1",
               marginRight: "40px",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
-              {/* YouTube Icon */}
+            {channel?.thumbnail ? (
+              <img
+                src={channel.thumbnail}
+                style={{
+                  width: "90px",
+                  height: "90px",
+                  borderRadius: "50%",
+                  marginRight: "24px",
+                  border: "3px solid #00f0ff",
+                  display: "flex",
+                }}
+                alt=""
+              />
+            ) : (
               <svg
                 viewBox="0 0 24 24"
-                width="40"
-                height="40"
+                width="80"
+                height="80"
                 fill="#FF0000"
-                style={{ marginRight: "16px" }}
+                style={{ marginRight: "24px", display: "flex" }}
               >
                 <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.107C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.388.511a3.002 3.002 0 0 0-2.11 2.107C0 8.053 0 12 0 12s0 3.948.502 5.837a3.003 3.003 0 0 0 2.11 2.107c1.883.51 9.388.51 9.388.51s7.505 0 9.388-.51a3.003 3.003 0 0 0 2.11-2.107C24 15.948 24 12 24 12s0-3.948-.502-5.837z" />
                 <path fill="#FFF" d="M9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
               </svg>
+            )}
+
+            <div style={{ display: "flex", flexDirection: "column" }}>
               <h1
                 style={{
-                  fontSize: title.length > 18 ? "42px" : "54px",
+                  fontSize: title.length > 18 ? "38px" : "48px",
                   fontWeight: "900",
                   lineHeight: "1.1",
                   margin: 0,
                   color: "#FFFFFF",
                   letterSpacing: "-0.02em",
+                  marginBottom: "8px",
+                  display: "flex",
                 }}
               >
                 {title}
               </h1>
+              {customUrl && (
+                <span
+                  style={{
+                    fontSize: "16px",
+                    color: "#888888",
+                    fontWeight: "bold",
+                    fontFamily: "monospace",
+                    display: "flex",
+                  }}
+                >
+                  {customUrl}
+                </span>
+              )}
             </div>
-            {customUrl && (
-              <span
-                style={{
-                  fontSize: "18px",
-                  color: "#888888",
-                  fontWeight: "bold",
-                  fontFamily: "monospace",
-                }}
-              >
-                {customUrl}
-              </span>
-            )}
           </div>
 
           {/* Right Side: Statistics Grid */}
