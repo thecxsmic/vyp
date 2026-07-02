@@ -268,7 +268,7 @@ ${competitorsText}
           {error || "This channel analysis report doesn't exist or has expired."}
         </p>
         <Link href="/" className="px-4 py-2.5 bg-white text-black rounded-lg text-xs font-medium hover:bg-zinc-200 transition-colors">
-          Go to Svay →
+          Go to <span className="font-logo font-black uppercase tracking-tight ml-0.5">Svay</span> →
         </Link>
       </div>
     );
@@ -303,7 +303,7 @@ ${competitorsText}
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 hover:opacity-70 transition-opacity">
             <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-emerald-400 to-cyan-400" />
-            <span className="text-sm font-semibold tracking-tight text-white">Svay</span>
+            <span className="font-logo font-black text-base text-white tracking-tight uppercase">Svay</span>
           </Link>
           <div className="flex items-center gap-3">
             <Badge>Public Report</Badge>
@@ -311,7 +311,7 @@ ${competitorsText}
               href="/"
               className="px-3.5 py-1.5 bg-white text-black rounded-lg text-xs font-medium hover:bg-zinc-200 transition-colors inline-flex items-center gap-1.5"
             >
-              Try Svay <ArrowRight className="w-3 h-3" />
+              Try <span className="font-logo font-black uppercase tracking-tight text-[10px] ml-0.5">Svay</span> <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
         </div>
@@ -444,7 +444,7 @@ ${competitorsText}
                 {/* Neural summary */}
                 <div className="bg-zinc-950 border border-zinc-800/80 rounded-2xl p-6 flex flex-col justify-between">
                   <div>
-                    <SectionLabel icon={Sparkles}>Svay Neural Summary</SectionLabel>
+                    <SectionLabel icon={Sparkles}><span className="font-logo font-black uppercase tracking-tight mr-0.5">Svay</span> Neural Summary</SectionLabel>
                     <p className="text-sm text-zinc-400 leading-relaxed">
                       This channel registers a{" "}
                       <span className="text-white font-medium">{tierData.label}</span> classification in its category.
@@ -454,7 +454,7 @@ ${competitorsText}
                   </div>
                   <div className="mt-6 pt-5 border-t border-zinc-900 flex items-center gap-2.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-[10px] text-zinc-600 font-medium uppercase tracking-widest">Ecosystem Report · Svay Intelligence</span>
+                    <span className="text-[10px] text-zinc-600 font-medium uppercase tracking-widest">Ecosystem Report · <span className="font-logo font-black uppercase tracking-tight mr-0.5">Svay</span> Intelligence</span>
                   </div>
                 </div>
               </div>
@@ -705,7 +705,7 @@ ${competitorsText}
                     <div>
                       <h4 className="text-sm font-medium text-white mb-1">Live Format Comparison</h4>
                       <p className="text-xs text-zinc-500 leading-relaxed max-w-md">
-                        Upgrade to Svay Pro to overlay competitor upload schedules, compare thumbnails side-by-side, and map video structures.
+                        Upgrade to <span className="font-logo font-black uppercase tracking-tight mr-0.5">Svay</span> Pro to overlay competitor upload schedules, compare thumbnails side-by-side, and map video structures.
                       </p>
                     </div>
                     <Link
@@ -861,7 +861,7 @@ ${competitorsText}
 
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-800 bg-zinc-900 text-[10px] font-medium text-zinc-400 tracking-wide uppercase">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Svay Creator Intelligence
+            <span className="font-logo font-black uppercase tracking-tight mr-0.5">Svay</span> Creator Intelligence
           </div>
 
           <h2 className="text-3xl md:text-5xl font-semibold text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-zinc-500 tracking-tight leading-none max-w-2xl mx-auto">
