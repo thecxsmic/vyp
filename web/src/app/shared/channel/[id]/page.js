@@ -67,6 +67,7 @@ export default function SharedChannelPage({ params }) {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedVideo, setSelectedVideo] = useState(null);
+  const [hoverInfo, setHoverInfo] = useState(null);
 
   useEffect(() => {
     const fetchReport = async () => {
@@ -684,13 +685,29 @@ export default function SharedChannelPage({ params }) {
           )}
 
           {activeTab === "videos" && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-              {videos.map((video) => (
-                <VideoCard 
-                  key={video.id}
-                  video={video}
-                  onClick={() => setSelectedVideo(video)}
-                />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+              {videos.map((item, i) => (
+                <motion.div
+                  key={item.id?.videoId || item.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.02 }}
+                >
+                  <VideoCard 
+                    item={{
+                      ...item,
+                      snippet: item.snippet || {
+                        title: item.title,
+                        thumbnails: { medium: { url: item.thumbnail }, high: { url: item.thumbnail } },
+                        publishedAt: item.published_at,
+                        channelTitle: channel.title
+                      }
+                    }}
+                    setHoverInfo={setHoverInfo}
+                    setSelectedVideo={setSelectedVideo}
+                    formatNumber={formatNumber}
+                  />
+                </motion.div>
               ))}
             </motion.div>
           )}
@@ -720,8 +737,10 @@ export default function SharedChannelPage({ params }) {
       {/* Video Details Modal */}
       {selectedVideo && (
         <VideoDetailsModal 
-          video={selectedVideo} 
-          onClose={() => setSelectedVideo(null)} 
+          selectedVideo={selectedVideo} 
+          setSelectedVideo={setSelectedVideo}
+          formatNumber={formatNumber}
+          channelSubs={channel.statistics?.subscriberCount}
         />
       )}
     </div>
