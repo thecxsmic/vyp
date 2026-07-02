@@ -21,7 +21,8 @@ import {
   Globe,
   Share2,
   Lock,
-  ExternalLink
+  ExternalLink,
+  Search
 } from "lucide-react";
 
 export default function AdminPage() {
@@ -54,9 +55,11 @@ export default function AdminPage() {
   const [grantError, setGrantError] = useState("");
   const [grantSuccess, setGrantSuccess] = useState("");
 
-  // Form states - shareable analysis
+  // Form states - shareable analysis search picker
   const [shareQuery, setShareQuery] = useState("");
-  const [generatingShareLink, setGeneratingShareLink] = useState(false);
+  const [searchingChannels, setSearchingChannels] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [generatingId, setGeneratingId] = useState("");
   const [shareSuccessLink, setShareSuccessLink] = useState("");
   const [generatedChannelId, setGeneratedChannelId] = useState("");
   const [shareError, setShareError] = useState("");
@@ -200,11 +203,32 @@ export default function AdminPage() {
     }
   };
 
-  const handleGenerateShareLink = async (e) => {
+  const handleSearchChannels = async (e) => {
     e.preventDefault();
     if (!shareQuery.trim()) return;
 
-    setGeneratingShareLink(true);
+    setSearchingChannels(true);
+    setShareError("");
+    setSearchResults([]);
+    setShareSuccessLink("");
+    setGeneratedChannelId("");
+
+    try {
+      const res = await fetch(`/api/youtube/channel?q=${encodeURIComponent(shareQuery.trim())}`);
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Channel search failed");
+      }
+      setSearchResults(data.items || []);
+    } catch (err) {
+      setShareError(err.message);
+    } finally {
+      setSearchingChannels(false);
+    }
+  };
+
+  const handleGenerateShareLink = async (channelId) => {
+    setGeneratingId(channelId);
     setShareError("");
     setShareSuccessLink("");
     setGeneratedChannelId("");
@@ -213,7 +237,7 @@ export default function AdminPage() {
       const res = await fetch("/api/admin/share-analysis", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: shareQuery.trim() }),
+        body: JSON.stringify({ query: channelId }),
       });
 
       const data = await res.json();
@@ -224,12 +248,13 @@ export default function AdminPage() {
       const publicLink = `${window.location.origin}/shared/channel/${data.channelId}`;
       setShareSuccessLink(publicLink);
       setGeneratedChannelId(data.channelId);
+      setSearchResults([]);
       setShareQuery("");
       fetchChannels();
     } catch (err) {
       setShareError(err.message);
     } finally {
-      setGeneratingShareLink(false);
+      setGeneratingId("");
     }
   };
 
@@ -303,7 +328,7 @@ export default function AdminPage() {
         </div>
 
         {/* Tab Controls */}
-        <div className="flex border-b border-white/5 gap-8 bg-transparent px-2">
+        <div className="flex border-b border-white/5 gap-6 sm:gap-8 bg-transparent px-2">
           {[
             { id: "promos", label: "Promo & Subscriptions", icon: Ticket },
             { id: "shares", label: "Public Share Reports", icon: Globe }
@@ -311,7 +336,7 @@ export default function AdminPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`py-4 text-[10px] uppercase tracking-widest font-black transition-all border-b-2 whitespace-nowrap cursor-pointer flex items-center gap-2 ${
+              className={`py-4 text-[9px] sm:text-[10px] uppercase tracking-widest font-black transition-all border-b-2 whitespace-nowrap cursor-pointer flex items-center gap-2 ${
                 activeTab === tab.id 
                   ? "border-brand-volt text-white font-black" 
                   : "border-transparent text-zinc-500 hover:text-zinc-300"
@@ -546,7 +571,7 @@ export default function AdminPage() {
                               <span className={`${isInactive ? "line-through text-zinc-500" : ""}`}>{item.code}</span>
                               <button
                                 onClick={() => copyToClipboard(item.code)}
-                                className="p-1 text-zinc-500 hover:text-white transition-all rounded cursor-pointer"
+                                className="p-1 text-zinc-500 hover:text-white transition-all rounded cursor-pointer animate-none bg-transparent border-none"
                                 title="Copy code"
                               >
                                 {copiedCode === item.code ? (
@@ -659,21 +684,21 @@ export default function AdminPage() {
                 <div className="space-y-4 sm:space-y-6">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-brand-volt/10 rounded-xl border border-brand-volt/20">
-                      <Globe className="w-4 sm:w-5 h-4 sm:h-5 text-brand-volt" />
+                      <Search className="w-4 sm:w-5 h-4 sm:h-5 text-brand-volt" />
                     </div>
                     <div>
-                      <h2 className="font-display font-extrabold text-base sm:text-lg text-white uppercase">Generate Share Report Link</h2>
-                      <p className="text-zinc-500 text-[10px] sm:text-xs mt-0.5">Analyze and cache any channel on YouTube to generate a public report with dynamic OG image preview.</p>
+                      <h2 className="font-display font-extrabold text-base sm:text-lg text-white uppercase">Search & Generate Public Report</h2>
+                      <p className="text-zinc-500 text-[10px] sm:text-xs mt-0.5">Search for a channel to verify its details before generating its public shared link.</p>
                     </div>
                   </div>
 
-                  <form onSubmit={handleGenerateShareLink} className="space-y-4 max-w-xl">
+                  <form onSubmit={handleSearchChannels} className="space-y-4 max-w-xl">
                     <div className="space-y-1.5">
-                      <label className="text-[9px] sm:text-[10px] font-black text-zinc-400 uppercase tracking-wider">Channel ID or @Handle</label>
+                      <label className="text-[9px] sm:text-[10px] font-black text-zinc-400 uppercase tracking-wider">Channel Name or @Handle</label>
                       <div className="flex flex-col sm:flex-row gap-2">
                         <input 
                           type="text"
-                          placeholder="e.g. @veloce or UC..."
+                          placeholder="Search e.g. MKBHD, MrBeast..."
                           value={shareQuery}
                           onChange={(e) => setShareQuery(e.target.value)}
                           className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-xs sm:text-sm focus:outline-none focus:border-brand-volt transition-all placeholder:text-zinc-600"
@@ -681,14 +706,14 @@ export default function AdminPage() {
                         />
                         <button
                           type="submit"
-                          disabled={generatingShareLink}
-                          className="px-6 py-3 bg-brand-volt hover:bg-brand-volt/90 text-black font-black text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                          disabled={searchingChannels || generatingId !== ""}
+                          className="px-6 py-3 bg-brand-volt text-black font-black text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shrink-0"
                         >
-                          {generatingShareLink ? (
+                          {searchingChannels ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
                           ) : (
                             <>
-                              <Share2 className="w-3.5 h-3.5" /> Generate Link
+                              <Search className="w-3.5 h-3.5" /> Search
                             </>
                           )}
                         </button>
@@ -697,6 +722,47 @@ export default function AdminPage() {
 
                     {shareError && (
                       <p className="text-brand-rose text-[11px] font-semibold">{shareError}</p>
+                    )}
+
+                    {/* Search Results Picker */}
+                    {searchResults.length > 0 && (
+                      <div className="space-y-3 pt-4 border-t border-white/5 animate-in fade-in duration-300">
+                        <label className="text-[9px] font-black text-zinc-500 uppercase tracking-wider block">Search Results (Select Correct Channel)</label>
+                        <div className="space-y-2 max-h-60 overflow-y-auto no-scrollbar border border-white/5 rounded-2xl p-2 bg-black/30 divide-y divide-white/5">
+                          {searchResults.map((item) => (
+                            <div key={item.id} className="flex items-center justify-between gap-3 p-2 hover:bg-white/5 rounded-xl transition-all first:pt-2 last:pb-2">
+                              <div className="flex items-center gap-3 overflow-hidden">
+                                <img 
+                                  src={item.thumbnail || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=30&q=80"} 
+                                  className="w-8 h-8 rounded-full object-cover border border-white/5 shrink-0" 
+                                  alt="" 
+                                />
+                                <div className="overflow-hidden">
+                                  <span className="text-xs font-bold text-white block truncate">{item.title}</span>
+                                  <span className="text-[9px] text-zinc-500 font-mono block truncate">{item.custom_url || item.id}</span>
+                                </div>
+                              </div>
+                              
+                              <button
+                                type="button"
+                                disabled={generatingId !== ""}
+                                onClick={() => handleGenerateShareLink(item.id)}
+                                className="px-3.5 py-2 bg-brand-volt disabled:opacity-40 text-black text-[9px] font-black uppercase tracking-wider rounded-lg hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0 flex items-center gap-1"
+                              >
+                                {generatingId === item.id ? (
+                                  <>
+                                    <Loader2 className="w-3 h-3 animate-spin" /> Gen
+                                  </>
+                                ) : (
+                                  <>
+                                    <Plus className="w-3 h-3 stroke-[2.5]" /> Generate
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     )}
 
                     {shareSuccessLink && (
@@ -773,7 +839,7 @@ export default function AdminPage() {
                 </div>
               ) : channels.length === 0 ? (
                 <div className="py-12 text-center text-zinc-500 text-xs sm:text-sm font-medium">
-                  No channel reports stored. Generate one using the form above.
+                  No channel reports stored. Search and generate one above.
                 </div>
               ) : (
                 <div className="overflow-x-auto -mx-4 sm:mx-0">
@@ -816,7 +882,7 @@ export default function AdminPage() {
                               <div className="flex gap-2 justify-end">
                                 <button
                                   onClick={() => copyToClipboard(publicLink)}
-                                  className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[9px] font-black uppercase tracking-wider text-white transition-all cursor-pointer flex items-center gap-1.5"
+                                  className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[9px] font-black uppercase tracking-wider text-white transition-all cursor-pointer flex items-center gap-1"
                                 >
                                   {copiedCode === publicLink ? (
                                     <>
@@ -824,7 +890,7 @@ export default function AdminPage() {
                                     </>
                                   ) : (
                                     <>
-                                      <Copy className="w-3.5 h-3.5" /> Copy Link
+                                      <Copy className="w-3.5 h-3.5" /> Copy<span className="hidden sm:inline"> Link</span>
                                     </>
                                   )}
                                 </button>
@@ -833,7 +899,7 @@ export default function AdminPage() {
                                   target="_blank"
                                   className="px-3 py-1.5 bg-brand-volt hover:bg-brand-volt/95 text-black rounded-lg text-[9px] font-black uppercase tracking-wider transition-all hover:scale-105 active:scale-95 flex items-center gap-1"
                                 >
-                                  Open Report <ExternalLink className="w-3 h-3 stroke-[2.5]" />
+                                  Open<span className="hidden sm:inline"> Report</span> <ExternalLink className="w-3 h-3 stroke-[2.5]" />
                                 </Link>
                               </div>
                             </td>
